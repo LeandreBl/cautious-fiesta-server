@@ -1,0 +1,6 @@
+[submodule "sfml-scene"]
+	path = sfml-scene
+	url = git@github.com:LeandreBl/sfml-scene.git
+[submodule "discord-rpc"]
+	path = discord-rpc
+	url = git@github.com:discordapp/discord-rpc.git
