@@ -17,7 +17,9 @@ class Serializer
       public:
 	Serializer() noexcept;
 	~Serializer() noexcept;
+	Serializer(const Serializer &packet) noexcept;
 	void clear() noexcept;
+	void setHeader(enum pktType_e pktType) noexcept;
 	bool set(const std::string &str) noexcept;
 	bool set(const TcpPacketHeader &header) noexcept;
 	bool set(const Asset &asset) noexcept;
@@ -45,9 +47,9 @@ class Serializer
 	bool forceSize(size_t newSize) noexcept;
 	template <typename T> bool forceSetFirst(const T &obj)
 	{
-		if (resizeForNewElement(sizeof(obj)) == false)
+		if (resizeForNewElement(sizeof(obj)) == -1)
 			return false;
-		std::memmove(_data, _data + sizeof(obj), _size);
+		std::memmove(_data + sizeof(obj), _data, _size);
 		std::memcpy(_data, &obj, sizeof(obj));
 		_size += sizeof(obj);
 		return true;
@@ -55,12 +57,6 @@ class Serializer
 	int reserve(uint64_t size) noexcept;
 	size_t getSize() const noexcept;
 
-      private:
-	int8_t *_data;
-	size_t _size;
-	size_t _alloc_size;
-	int resizeForNewElement(size_t newElementSize) noexcept;
-	void shift(size_t from) noexcept;
 	bool nativeSet(const void *data, size_t len) noexcept
 	{
 		if (resizeForNewElement(len) == -1)
@@ -73,5 +69,12 @@ class Serializer
 	{
 		return nativeSet(&obj, sizeof(obj));
 	}
+
+      private:
+	int8_t *_data;
+	size_t _size;
+	size_t _alloc_size;
+	int resizeForNewElement(size_t newElementSize) noexcept;
+	void shift(size_t from) noexcept;
 };
 } // namespace cf

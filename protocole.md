@@ -18,73 +18,71 @@
      uint8_t boolRequestOk;
    }
 ```
->Create a GameSession :
+>Create a GameRoom :
 ```
-<- [header]: { CREATE_GAMESESSION }
+<- [header]: { CREATE_GAMEROOM }
    [payload]: {
      uint64_t nameLen;
      char sessionName[nameLen];
    }
--> [header]: { CREATE_GAMESESSION }
+-> [header]: { CREATE_GAMEROOM }
    [payload]: {
      uint8_t boolIsOk;
    }
 ```
->Delete a GameSession :
+>Delete a GameRoom :
 ```
-<- [header]: { DELETE_GAMESESSION }
-   [payload]: {
-     uint64_t nameLen;
-     char sessionName[nameLen];
-   }
--> [header]: { DELETE_GAMESESSION }
+<- [header]: { DELETE_GAMEROOM }
+-> [header]: { DELETE_GAMEROOM }
    [payload]: {
      uint8_t boolIsOk;
    }
 ```
->Get a list of availables GameSessions :
+>Get a list of availables GameRooms :
 ```
-<- [header]: { GET_GAMESESSIONS_LIST }
--> [header]: { GET_GAMESESSIONS_LIST }
+<- [header]: { GET_GAMEROOMS_LIST }
+-> [header]: { GET_GAMEROOMS_LIST }
    [payload]: {
      uint64_t size;
      {
-       uint8_t playersConnected; /* out of 4 */
+       uint64_t playersConnected;
        uint64_t sessionNameLength;
        char sessionName[sessionNameLength];
      } [size]
    }
 ```
->Join a GameSession :
+>Join a GameRoom :
 ```
-<- [header]: { JOIN_GAMESESSION }
+<- [header]: { JOIN_GAMEROOM }
    [payload]: {
      uint64_t sessionNameLength;
      char sessionName[sessionNameLength];
    }
--> [header]: { JOIN_GAMESESSION }
+-> [header]: { JOIN_GAMEROOM }
    [payload]: {
      uint8_t boolRequestOk;
    }
 ```
->Leave current GameSession :
+>Leave current GameRoom :
 ```
-<- [header]: { LEAVE_GAMESESSION }
--> [header]: { LEAVE_GAMESESSION }
+<- [header]: { LEAVE_GAMEROOM }
+-> [header]: { LEAVE_GAMEROOM }
    [payload]: {
      uint8_t boolRequestOk;
    }
 ```
->Get the player list of a GameSession :
+>Get the player list of a GameRoom :
 ```
-<- [header]: { GET_GAMESESSION_PLAYERS_LIST }
+<- [header]: { GET_GAMEROOM_PLAYERS_LIST }
    [payload]: {
      uint64_t sessionNameLength;
-     char gameSession[sessionNameLength];
+     char GameRoom[sessionNameLength];
    }
--> [header]: { GET_GAMESESSION_PLAYERS_LIST }
+-> [header]: { GET_GAMEROOM_PLAYERS_LIST }
    [payload]: {
      uint8_t boolRequestIsOk;
+	 uint64_t gameRoomNameLength;
+	 char GameRoom[gameRoomNameLength];
      uint64_t nb_of_elements;
      {
        uint8_t boolIsReadyState;
@@ -93,7 +91,7 @@
      } [nb_of_elements]
    }
 ```
->Send a message in your GameSession chat :
+>Send a message in your GameRoom chat :
 ```
 <- [header]: { SEND_MESSAGE }
    [payload]: {
@@ -105,7 +103,7 @@
      uin8_t boolRequestOK;
    }
 ```
->Receive a message from current GameSession :
+>Receive a message from current GameRoom :
 ```
 -> [header]: { RECEIVE_MESSAGE }
    [payload]: {
