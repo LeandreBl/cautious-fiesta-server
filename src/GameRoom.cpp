@@ -9,8 +9,7 @@ GameRoom::GameRoom(const std::string &name) noexcept : _name(name)
 void GameRoom::sendAllTcp(Serializer &packet, enum pktType_e type) const noexcept
 {
 	for (auto &&i : _players) {
-		auto pkt(packet);
-		i->pushPacket(pkt, type);
+		i->pushPacket(packet, type);
 	}
 }
 

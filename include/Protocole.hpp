@@ -43,7 +43,7 @@ namespace cf {
 		bool isCorrect() const noexcept;
 		pktTcpHeader_t &getNativeHandle() noexcept;
 		const pktTcpHeader_t &getNativeHandle() const noexcept;
-		void display() const noexcept;
+		void display(bool recv = true) const noexcept;
 		private:
 		pktTcpHeader_t _header;
 	};

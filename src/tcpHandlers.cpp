@@ -10,11 +10,16 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 
 	if (!toRead.get(nickname))
 		return -1;
+	if (nickname.empty()) {
+		answer.set(false);
+		handle.pushPacket(answer, cf::LOGIN);
+		return 0;
+	}
 	for (auto &&i : _connectionPool) {
-		if ((!i.name().empty() && i.name() == nickname)
-		    || nickname.empty())
+		if (i.name() == nickname) {
 			isOk = false;
-		break;
+			break;
+		}
 	}
 	if (isOk == true)
 		handle.name(nickname);
@@ -41,8 +46,6 @@ void Server::fillGameRoomPlayers(const std::string &roomName,
 			packet.set(true);
 			packet.set(i.getName());
 			packet.set((uint64_t)i.getPlayers().size());
-			std::cout << (uint64_t)i.getPlayers().size()
-				  << std::endl;
 			for (auto &&i : i.getPlayers()) {
 				packet.set(i->ready());
 				packet.set(i->name());
@@ -99,8 +102,8 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 		if (i.getName() == name) {
 			answer.set(false);
 			handle.pushPacket(answer, cf::CREATE_GAMEROOM);
-			say(false, "[%s]: {%s} already exist\n",
-			    __FUNCTION__, name.c_str());
+			say(false, "[%s]: {%s} already exist\n", __FUNCTION__,
+			    name.c_str());
 			return 0;
 		}
 	}
@@ -160,13 +163,12 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 			handle.pushPacket(answer, cf::JOIN_GAMEROOM);
 			resendGameRoomsHandler();
 			resendPlayerListHandler();
-			say(true, "~%s joined {%s}\n",
-			    handle.name().c_str(), i.getName().c_str());
+			say(true, "~%s joined {%s}\n", handle.name().c_str(),
+			    i.getName().c_str());
 			return 0;
 		}
 	}
-	say(false, "[%s]: {%s} does not exist\n", __FUNCTION__,
-	    name.c_str());
+	say(false, "[%s]: {%s} does not exist\n", __FUNCTION__, name.c_str());
 	return 0;
 }
 
@@ -178,7 +180,7 @@ int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	answer.set(ok);
 	if (ok == true) {
 		say(ok, "~%s left {%s}\n", handle.name().c_str(),
-		    handle.room());
+		    handle.room().getName().c_str());
 		handle.leaveRoom();
 	}
 	handle.pushPacket(answer, cf::LEAVE_GAMEROOM);
@@ -233,10 +235,10 @@ int Server::receiveGameRoomMessageHandler(PlayerConnection &handle,
 void Server::resendPlayerListHandler() noexcept
 {
 	for (auto &&i : _connectionPool) {
+		std::cout << i.name() << std::endl;
 		if (i.isInRoom()) {
+			std::cout << "isaroom" << std::endl;
 			Serializer answer;
-			answer.set(true);
-			answer.set(i.room().getName());
 			fillGameRoomPlayers(i.room().getName(), answer);
 			i.pushPacket(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
 		}

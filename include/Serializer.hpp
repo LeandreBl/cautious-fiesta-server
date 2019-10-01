@@ -18,6 +18,8 @@ class Serializer
 	Serializer() noexcept;
 	~Serializer() noexcept;
 	Serializer(const Serializer &packet) noexcept;
+	Serializer(const Serializer &packet,
+			       enum pktType_e pktType) noexcept;
 	void clear() noexcept;
 	void setHeader(enum pktType_e pktType) noexcept;
 	bool set(const std::string &str) noexcept;

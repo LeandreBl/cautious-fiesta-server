@@ -148,8 +148,7 @@ void PlayerConnection::ready(bool state) noexcept
 void PlayerConnection::pushPacket(Serializer &packet,
 				  enum pktType_e type) noexcept
 {
-	packet.setHeader(type);
-	_toWrite.emplace(packet);
+	_toWrite.emplace(packet, type);
 }
 
 

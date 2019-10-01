@@ -14,8 +14,17 @@ Serializer::~Serializer() noexcept
 	delete[] _data;
 }
 
+Serializer::Serializer(const Serializer &packet,
+		       enum pktType_e pktType) noexcept
+    : _data(nullptr), _size(0), _alloc_size(0)
+{
+	TcpPacketHeader header(pktType, packet._size);
+	nativeSet(header);
+	nativeSet(packet._data, packet._size);
+}
+
 Serializer::Serializer(const Serializer &packet) noexcept
-: _data(nullptr), _size(0), _alloc_size(0)
+    : _data(nullptr), _size(0), _alloc_size(0)
 {
 	nativeSet(packet._data, packet._size);
 }
@@ -23,6 +32,7 @@ Serializer::Serializer(const Serializer &packet) noexcept
 void Serializer::setHeader(enum pktType_e pktType) noexcept
 {
 	TcpPacketHeader header(pktType, _size);
+	header.display(false);
 	forceSetFirst(header);
 }
 

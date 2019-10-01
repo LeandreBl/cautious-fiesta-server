@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.1.0)
+cmake_minimum_required (VERSION 3.7)
 
 project("cautious-server" CXX)
 
@@ -16,8 +16,6 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-Wall -g3 -Wextra -O3 -fsanitize=address")
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 
 conan_basic_setup()
-
-find_package(Boost 1.71)
 
 add_subdirectory(sfml-scene)
 add_subdirectory(discord-rpc)
