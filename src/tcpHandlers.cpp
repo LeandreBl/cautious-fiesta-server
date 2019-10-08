@@ -54,6 +54,7 @@ void Server::fillGameRoomPlayers(const std::string &roomName,
 		}
 	}
 	packet.set(false);
+	packet.set(std::string(""));
 	packet.set((uint64_t)0);
 }
 
@@ -235,9 +236,7 @@ int Server::receiveGameRoomMessageHandler(PlayerConnection &handle,
 void Server::resendPlayerListHandler() noexcept
 {
 	for (auto &&i : _connectionPool) {
-		std::cout << i.name() << std::endl;
 		if (i.isInRoom()) {
-			std::cout << "isaroom" << std::endl;
 			Serializer answer;
 			fillGameRoomPlayers(i.room().getName(), answer);
 			i.pushPacket(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
@@ -257,6 +256,7 @@ int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &toRead)
 	handle.pushPacket(answer, cf::TOGGLE_READY);
 	say(true, "~%s: %s\n", handle.name().c_str(),
 	    (handle.ready() ? "ready" : "not ready"));
+	resendPlayerListHandler();
 	return 0;
 }
 

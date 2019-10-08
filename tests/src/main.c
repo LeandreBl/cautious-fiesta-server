@@ -403,12 +403,12 @@ void *receiver_handler(void *data)
 	packet_t header;
 
 	while (1) {
-		lclient_update(client, 100);
+		lclient_update(client, 10);
 		if (lbuffer_size(&client->buffer) >= sizeof(packet_t)) {
 			lbuffer_read(&client->buffer, &header, sizeof(header));
 			packet_display(&header);
 			while (lbuffer_size(&client->buffer) < header.len)
-				lclient_update(client, 100);
+				lclient_update(client, 10);
 			rl_clear_visible_line();
 			printf("[] ");
 			actions[header.type].receiver(client);

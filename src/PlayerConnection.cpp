@@ -148,6 +148,8 @@ void PlayerConnection::ready(bool state) noexcept
 void PlayerConnection::pushPacket(Serializer &packet,
 				  enum pktType_e type) noexcept
 {
+	TcpPacketHeader header(type, packet.getSize());
+	header.display(false);
 	_toWrite.emplace(packet, type);
 }
 
