@@ -6,6 +6,7 @@
 
 #include "Serializer.hpp"
 #include "Protocole.hpp"
+#include "Player.hpp"
 
 namespace cf
 {
@@ -19,7 +20,8 @@ using boost::asio::ip::udp;
 class PlayerConnection
 {
       public:
-	PlayerConnection(std::unique_ptr<tcp::socket> &socket, Server &server) noexcept;
+	PlayerConnection(std::unique_ptr<tcp::socket> &socket,
+			 Server &server) noexcept;
 	~PlayerConnection() = default;
 
 	void name(const std::string &name) noexcept;
@@ -32,15 +34,17 @@ class PlayerConnection
 	void room(GameRoom &room) noexcept;
 	void leaveRoom() noexcept;
 	int getId() const noexcept;
+	std::string getIp() const noexcept;
 	void close() noexcept;
 	void pushPacket(Serializer &packet, enum pktType_e type) noexcept;
 	void refreshTcp() noexcept;
-
+	void setPlayer(const Player::stats &stats) noexcept;
+	Player &getPlayer() noexcept;
       protected:
 	void asyncReadHeader(const boost::system::error_code &error,
 			     std::size_t bytes_transferred);
 	void asyncReadPayload(const boost::system::error_code &error,
-			     std::size_t bytes_transferred);
+			      std::size_t bytes_transferred);
 	int writeTcp(const Serializer &serializer) noexcept;
 	void headerMode() noexcept;
 	void packetMode() noexcept;
@@ -55,6 +59,7 @@ class PlayerConnection
 	GameRoom *_room;
 	std::queue<Serializer> _toWrite;
 	Server &_server;
+	Player _player;
 	bool _ready;
 };
 } // namespace cf

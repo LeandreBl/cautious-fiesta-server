@@ -1,4 +1,7 @@
-#include "trace.hpp"
+#include <sstream>
+#include <cstring>
+
+#include "Trace.hpp"
 
 int trace(const char string[]) noexcept
 {
@@ -8,12 +11,18 @@ int trace(const char string[]) noexcept
 int trace(bool isOk) noexcept
 {
 	const char *color;
+	auto t = time(NULL);
+	auto tp = localtime(&t);
+	char *asc = asctime(tp);
+	int ret;
 
 	if (isOk == true)
 		color = "[ " BOLDGREEN "OK" RESET " ] ";
 	else
 		color = "[ " BOLDRED "KO" RESET " ] ";
-	return fputs(color, stderr);
+	asc[strlen(asc) - 1] = 0;
+	ret = fputs(color, stderr);
+	return ret + fprintf(stderr, "[%s%s%s]: ", BOLDYELLOW, asc, RESET);
 }
 
 int trace(bool isOk, const char string[]) noexcept

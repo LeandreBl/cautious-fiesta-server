@@ -5,15 +5,14 @@ namespace cf
 int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	std::string nickname;
+	Player::stats stats;
 	Serializer answer;
 	uint8_t isOk = true;
 
-	if (!toRead.get(nickname))
-		return -1;
-	if (nickname.empty()) {
+	if (!toRead.get(nickname) || !toRead.get(stats) || nickname.empty()) {
 		answer.set(false);
 		handle.pushPacket(answer, cf::LOGIN);
-		return 0;
+		return -1;
 	}
 	for (auto &&i : _connectionPool) {
 		if (i.name() == nickname) {
@@ -21,13 +20,20 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 			break;
 		}
 	}
-	if (isOk == true)
+	if (isOk == true) {
 		handle.name(nickname);
+		handle.setPlayer(stats);
+	}
 	answer.set(isOk);
 	handle.pushPacket(answer, cf::LOGIN);
-	say(isOk, "~%s logged in\n", handle.name().c_str());
+	auto &player = handle.getPlayer();
+	say(isOk,
+	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f (%.1f%%) }\n",
+	    handle.name().c_str(), player.getLife(), player.getSpeed(),
+	    player.getAttack(), player.getAttackSpeed(), player.getArmor(),
+	    player.getArmorCoefficient());
 	return 0;
-}
+} // namespace cf
 
 void Server::fillGameRooms(Serializer &packet) const noexcept
 {
@@ -64,19 +70,22 @@ void Server::resendGameRoomsHandler() noexcept
 
 	fillGameRooms(answer);
 	for (auto &&i : _connectionPool) {
-		i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+		if (i.isLogged())
+			i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
 	}
 }
 
-int Server::logoutHandler(PlayerConnection &handle, Serializer &toRead)
+int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 {
 	uint8_t ok = handle.isLogged();
 	Serializer answer;
 
 	answer.set(ok);
 	handle.pushPacket(answer, cf::LOGOUT);
-	if (ok == false)
+	if (ok == false) {
+		say(false, "~%s logged out\n", handle.name().c_str());
 		return 0;
+	}
 	if (handle.isInRoom()) {
 		Serializer answer;
 		fillGameRoomPlayers(handle.room().getName(), answer);
@@ -116,7 +125,19 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	return 0;
 }
 
-int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
+void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
+{
+	Serializer packet;
+	auto room = handle.room();
+
+	packet.set(true);
+	for (auto &&i : room.getPlayers()) {
+		i->pushPacket(packet, cf::LEAVE_GAMEROOM);
+		i->leaveRoom();
+	}
+}
+
+int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
@@ -131,6 +152,7 @@ int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 			handle.pushPacket(answer, cf::DELETE_GAMEROOM);
 			say(true, "{%s} deleted\n",
 			    handle.room().getName().c_str());
+			kickRoomPlayers(handle);
 			_gameRooms.erase(it);
 			resendGameRoomsHandler();
 			return 0;
@@ -141,7 +163,7 @@ int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	return -1;
 }
 
-int Server::getGameRoomsHandler(PlayerConnection &handle, Serializer &toRead)
+int Server::getGameRoomsHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
@@ -173,7 +195,7 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	return 0;
 }
 
-int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
+int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 	uint8_t ok = handle.isInRoom();
@@ -226,8 +248,7 @@ int Server::sendGameRoomMessageHandler(PlayerConnection &handle,
 	return 0;
 }
 
-int Server::receiveGameRoomMessageHandler(PlayerConnection &handle,
-					  Serializer &toRead)
+int Server::receiveGameRoomMessageHandler(PlayerConnection &, Serializer &)
 {
 	say(false, "UNHANDLED: Received a cf::RECEIVE_MESSAGE packet\n");
 	return -1;
@@ -244,7 +265,7 @@ void Server::resendPlayerListHandler() noexcept
 	}
 }
 
-int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &toRead)
+int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
@@ -281,25 +302,13 @@ int Server::gameStartHandler(PlayerConnection &handle, Serializer &toRead)
 	return 0;
 }
 
-int Server::ackHandler(PlayerConnection &handle, Serializer &toRead)
+int Server::ackHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
 	handle.pushPacket(answer, cf::ACK);
 	say(true, "~%s #ACK#\n", handle.name().c_str());
 	return 0;
-}
-
-void Server::kick(PlayerConnection &handle) noexcept
-{
-	for (auto it = _connectionPool.begin(); it != _connectionPool.end();
-	     ++it) {
-		if (handle.getId() == it->getId()) {
-			it->close();
-			_connectionPool.erase(it);
-			return;
-		}
-	}
 }
 
 int Server::packetHandler(PlayerConnection &handle,
@@ -309,7 +318,7 @@ int Server::packetHandler(PlayerConnection &handle,
 	packetHeader.display();
 	if (packetHeader.isCorrect()
 	    && _callbacks[packetHeader.getType()](handle, payload) >= 0) {
-		handle.refreshTcp();
+		refreshTcpConnections();
 		return 0;
 	}
 	return -1;

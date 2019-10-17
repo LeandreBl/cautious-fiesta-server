@@ -10,7 +10,7 @@ PlayerConnection::PlayerConnection(std::unique_ptr<tcp::socket> &socket,
 				   Server &server) noexcept
     : _header(), _rd(0), _buffer(), _toRead(0), _payload(), _name(""),
       _udpSocket(), _tcpSocket(std::move(socket)), _room(nullptr), _toWrite(),
-      _server(server), _ready(false)
+      _server(server), _player(), _ready(false)
 {
 	headerMode();
 }
@@ -129,8 +129,7 @@ void PlayerConnection::close() noexcept
 	try {
 		_tcpSocket->shutdown(tcp::socket::shutdown_receive);
 		_tcpSocket->close();
-	} catch (const boost::system::error_code &error) {
-		std::cerr << error.message() << std::endl;
+	} catch (const boost::system::system_error &error) {
 	}
 	_name.clear();
 }
@@ -169,6 +168,21 @@ void PlayerConnection::leaveRoom() noexcept
 		_room->leave(*this);
 		_room = nullptr;
 	}
+}
+
+std::string PlayerConnection::getIp() const noexcept
+{
+	return _tcpSocket->local_endpoint().address().to_string();
+}
+
+void PlayerConnection::setPlayer(const Player::stats &stats) noexcept
+{
+	_player = Player(_name, stats);
+}
+
+Player &PlayerConnection::getPlayer() noexcept
+{
+	return _player;
 }
 
 } // namespace cf

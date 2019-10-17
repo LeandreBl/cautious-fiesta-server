@@ -48,6 +48,13 @@ void Server::run() noexcept
 	_service.run();
 }
 
+void Server::refreshTcpConnections() noexcept
+{
+	for (auto &&i : _connectionPool)
+		if (i.isLogged())
+			i.refreshTcp();
+}
+
 void Server::handleNewConnection()
 {
 	say(true, "%s: connected\n",
@@ -56,6 +63,19 @@ void Server::handleNewConnection()
 	_pending = std::make_unique<tcp::socket>(_service);
 	_listener.async_accept(*_pending,
 			       boost::bind(&Server::handleNewConnection, this));
+}
+
+void Server::kick(PlayerConnection &handle) noexcept
+{
+	for (auto it = _connectionPool.begin(); it != _connectionPool.end();
+	     ++it) {
+		if (handle.getId() == it->getId()) {
+			say(true, "%s: disconnected\n", it->getIp().c_str());
+			it->close();
+			_connectionPool.erase(it);
+			return;
+		}
+	}
 }
 
 void Server::stop() noexcept

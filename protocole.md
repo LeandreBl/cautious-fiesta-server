@@ -4,6 +4,11 @@
    [payload]: {
      uint64_t nicknameLength;
      char nickname[nicknameLength];
+	 float life;
+	 float speed;
+	 float attack;
+	 float attackSpeed;
+	 float armor;
    }
 -> [header]: { LOGIN }
    [payload]: {

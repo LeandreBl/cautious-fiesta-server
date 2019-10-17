@@ -1,5 +1,5 @@
 #include "Protocole.hpp"
-#include "trace.hpp"
+#include "Trace.hpp"
 #include "colors.h"
 
 namespace cf

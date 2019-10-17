@@ -10,7 +10,7 @@
 #include "PlayerConnection.hpp"
 #include "GameRoom.hpp"
 #include "colors.h"
-#include "trace.hpp"
+#include "Trace.hpp"
 
 namespace cf
 {
@@ -25,8 +25,9 @@ class Server
 	int packetHandler(PlayerConnection &handle,
 			  const TcpPacketHeader &packetHeader,
 			  Serializer &payload) noexcept;
-
+	void refreshTcpConnections() noexcept;
       protected:
+	void kickRoomPlayers(PlayerConnection &handle) noexcept;
 	void handleNewConnection();
 	int loginHandler(PlayerConnection &handle, Serializer &toRead);
 	int logoutHandler(PlayerConnection &handle, Serializer &toRead);

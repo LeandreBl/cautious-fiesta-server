@@ -102,9 +102,23 @@ void receive_str(lclient_t *client, char **str)
 
 void login_sender(lclient_t *client, const char *argument, packet_t *header)
 {
-	header->len = 8 + strlen(argument);
+	struct {
+		float life;
+		float speed;
+		float attack;
+		float attack_speed;
+		float armor;
+	} stats = {
+		.life = 10,
+		.speed = 10,
+		.attack = 10,
+		.attack_speed = 10,
+		.armor = 10,
+	};
+	header->len = 8 + strlen(argument) + sizeof(stats);
 	send_header(client, header);
 	send_str(client, argument);
+	write(client->socket.fd, &stats, sizeof(stats));
 }
 
 void login_receiver(lclient_t *client)

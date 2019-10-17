@@ -2,7 +2,7 @@
 #include <fstream>
 
 #include "Asset.hpp"
-#include "trace.hpp"
+#include "Trace.hpp"
 
 #include "colors.h"
 
