@@ -14,6 +14,22 @@
 
 namespace cf
 {
+class Server;
+struct AssetHandler {
+	AssetHandler(Server &server, const std::string &filename) noexcept;
+	AssetHandler(AssetHandler &&handler) = default;
+	AssetHandler &operator=(AssetHandler &v);
+	void operator=(AssetHandler &&v);
+	uint16_t port;
+	uint64_t filesize;
+	std::string filename;
+	uint64_t chksum;
+	tcp::socket receiver;
+	tcp::acceptor acceptor;
+	Server &server;
+	std::ifstream file;
+	char buffer[4096];
+};
 class Server
 {
       public:
@@ -26,6 +42,9 @@ class Server
 			  const TcpPacketHeader &packetHeader,
 			  Serializer &payload) noexcept;
 	void refreshTcpConnections() noexcept;
+	boost::asio::io_service &getService() noexcept;
+	uint64_t easyChksum(const std::string &filename) noexcept;
+
       protected:
 	void kickRoomPlayers(PlayerConnection &handle) noexcept;
 	void handleNewConnection();
@@ -50,6 +69,7 @@ class Server
 
 	void resendGameRoomsHandler() noexcept;
 	void resendPlayerListHandler() noexcept;
+	void sendRequiredAssets(PlayerConnection &handle) noexcept;
 
 	void fillGameRooms(Serializer &packet) const noexcept;
 	void fillGameRoomPlayers(const std::string &roomName,
@@ -67,6 +87,11 @@ class Server
 		trace(isOk, "%sServer%s: ", GREEN, RESET);
 		trace(format, args...);
 	}
+
+	void assetListenerCallback(AssetHandler &handler);
+	void assetWriterCallback(AssetHandler &handler,
+				 const boost::system::error_code &err);
+
 	std::function<int(PlayerConnection &handle, Serializer &toRead)>
 		_callbacks[cf::ACK + 1];
 	uint16_t _tcpPort;
@@ -76,6 +101,7 @@ class Server
 	std::unique_ptr<tcp::socket> _pending;
 	std::list<PlayerConnection> _connectionPool;
 	std::list<GameRoom> _gameRooms;
+	std::vector<AssetHandler> _assetsHandlers;
 	bool _running;
 };
 } // namespace cf

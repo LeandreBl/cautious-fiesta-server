@@ -134,9 +134,14 @@ void PlayerConnection::close() noexcept
 	_name.clear();
 }
 
+void PlayerConnection::assetReady(bool state) noexcept
+{
+	_assetReady = state;
+}
+
 bool PlayerConnection::ready() const noexcept
 {
-	return _ready;
+	return _ready && _assetReady;
 }
 
 void PlayerConnection::ready(bool state) noexcept

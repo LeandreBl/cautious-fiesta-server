@@ -141,7 +141,8 @@
      {
        uint64_t assetNameLenght;
        char assetName[assetNameLength];
-       uint32_t checksum;
+       uint64_t filesize;
+       uint64_t checksum;
      } [size]
    }
 <- [header]: { ASSETS_REQUIREMENT }
@@ -151,24 +152,17 @@
 ```
 >Asset loader
 ```
--> [header]: { ASSETS_LOADER }
-   [payload]: {
-     uint64_t nbOfAssets;
-     {
-       uint64_t assetNameLenght;
-       char assetName[assetNameLength];
-     } [nbOfAssets]
-   }
 <- [header]: { ASSETS_LOADER }
    [payload]: {
-     uint64_t nbOfAssets
-     {
-       uint64_t fileSize;
-       uint64_t filenameLength;
-       char filename[filenameLength];
-       uint32_t checksum;
-       int8_t file[filesize];
-     }
+    uint64_t assetNameLenght;
+    char assetName[assetNameLength];
+-> [header]: { ASSETS_LOADER }
+   [payload]: {
+    uint16_t awaitingTcpServerPort;
+    uint64_t fileSize;
+    uint64_t filenameLength;
+    char filename[filenameLength];
+    uint64_t checksum;
    }
 ```
 >Acknowledge :

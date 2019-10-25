@@ -1,3 +1,5 @@
+#include <filesystem>
+
 #include "Server.hpp"
 
 namespace cf
@@ -186,6 +188,7 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 			handle.pushPacket(answer, cf::JOIN_GAMEROOM);
 			resendGameRoomsHandler();
 			resendPlayerListHandler();
+			sendRequiredAssets(handle);
 			say(true, "~%s joined {%s}\n", handle.name().c_str(),
 			    i.getName().c_str());
 			return 0;
@@ -283,15 +286,107 @@ int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &)
 
 int Server::requireAssetHandler(PlayerConnection &handle, Serializer &toRead)
 {
-	(void)handle;
-	(void)toRead;
+	uint8_t state;
+
+	if (!toRead.get(state))
+		return -1;
+	handle.assetReady(state);
+	say(state, "~%s: assets ready\n", (state == true) ? "true" : "false");
 	return 0;
+}
+
+void Server::sendRequiredAssets(PlayerConnection &handle) noexcept
+{
+	uint64_t n = 0;
+	Serializer answer;
+	auto folder = std::filesystem::recursive_directory_iterator("assets/");
+
+	for (auto &&f : folder) {
+		if (f.is_regular_file()) {
+			++n;
+			answer.set(f.path().string());
+			answer.set(static_cast<uint64_t>(f.file_size()));
+			answer.set(static_cast<uint64_t>(
+				easyChksum(f.path().string())));
+		}
+	}
+	answer.forceSetFirst(n);
+	handle.pushPacket(answer, cf::ASSETS_REQUIREMENT);
+}
+
+void Server::assetWriterCallback(AssetHandler &handler,
+				 const boost::system::error_code &gerr)
+{
+	auto rd = handler.file.readsome(handler.buffer, sizeof(handler.buffer));
+	auto buffer = boost::asio::buffer(handler.buffer, rd);
+
+	if (!gerr && rd > 0) {
+		handler.receiver.async_write_some(
+			buffer,
+			std::bind(&Server::assetWriterCallback, this,
+				  std::ref(handler), std::placeholders::_1));
+	} else {
+		boost::system::error_code err;
+		handler.receiver.write_some(buffer, err);
+		say(!err, "$%u asset sent \"%s\".\n", handler.port,
+		    handler.filename.c_str());
+		handler.file.close();
+		handler.receiver.close();
+		for (auto it = _assetsHandlers.begin();
+		     it != _assetsHandlers.end(); ++it) {
+			if (it->port == handler.port) {
+				_assetsHandlers.erase(it);
+				return;
+			}
+		}
+	}
+}
+
+void Server::assetListenerCallback(AssetHandler &handler)
+{
+	say(true, "$%u sending asset \"%s\".\n", handler.port,
+	    handler.filename.c_str());
+	handler.acceptor.close();
+	handler.file.open(handler.filename);
+	assetWriterCallback(handler, boost::system::error_code());
+}
+
+static bool isValidPath(const std::string &filename)
+{
+	auto realpath = std::filesystem::absolute(filename).string();
+	auto currentPath = std::filesystem::current_path().string();
+
+	currentPath += "/assets/";
+	return realpath.compare(0, currentPath.length(), currentPath) == 0;
 }
 
 int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 {
-	(void)handle;
-	(void)toRead;
+	std::string filename;
+	Serializer answer;
+
+	if (!toRead.get(filename))
+		return -1;
+	if (std::filesystem::is_regular_file(filename) == false) {
+		say(false, "~%s: asset \"%s\" does not exist.\n",
+		    handle.name().c_str(), filename.c_str());
+		return 0;
+	} else if (isValidPath(filename) == false) {
+		say(false, "~%s: asset \"%s\" is not a valid path.\n",
+		    handle.name().c_str(), filename.c_str());
+		return 0;
+	}
+	auto &l = _assetsHandlers.emplace_back(*this, filename);
+	answer.set(l.port);
+	answer.set(l.filesize);
+	answer.set(l.filename);
+	answer.set(l.chksum);
+	handle.pushPacket(answer, cf::ASSETS_SEND);
+	say(true, "~%s: asset \"%s\" on port %u.\n", handle.name().c_str(),
+	    l.filename.c_str(), l.port);
+	l.acceptor.async_accept(
+		l.receiver,
+		std::bind(&Server::assetListenerCallback, this, std::ref(l)));
 	return 0;
 }
 

@@ -28,6 +28,7 @@ class PlayerConnection
 	const std::string &name() const noexcept;
 	void ready(bool state) noexcept;
 	bool ready() const noexcept;
+	void assetReady(bool state) noexcept;
 	bool isLogged() const noexcept;
 	bool isInRoom() const noexcept;
 	GameRoom &room() const noexcept;
@@ -61,5 +62,6 @@ class PlayerConnection
 	Server &_server;
 	Player _player;
 	bool _ready;
+	bool _assetReady;
 };
 } // namespace cf

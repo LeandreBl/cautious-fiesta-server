@@ -320,14 +320,16 @@ void require_receiver(lclient_t *client)
 {
 	uint64_t size;
 	char *name;
-	uint32_t chksum;
+	uint64_t chksum;
+	uint64_t filesize;
 
 	lbuffer_read(&client->buffer, &size, sizeof(size));
 	printf("%s: [%lu]\n", __FUNCTION__, size);
 	while (size > 0) {
 		receive_str(client, &name);
+		lbuffer_read(&client->buffer, &filesize, sizeof(filesize));
 		lbuffer_read(&client->buffer, &chksum, sizeof(chksum));
-		printf("{ %s | %u }\n", name, chksum);
+		printf("{ %s [%lu] %lu }\n", name, filesize, chksum);
 		free(name);
 		--size;
 	}
@@ -335,38 +337,25 @@ void require_receiver(lclient_t *client)
 
 void loader_sender(lclient_t *client, const char *argument, packet_t *header)
 {
-	header->len = 16 + strlen(argument);
-	uint64_t size = 1;
+	header->len = 8 + strlen(argument);
 
 	send_header(client, header);
-	write(client->socket.fd, &size, sizeof(size));
 	send_str(client, argument);
 }
 
 void loader_receiver(lclient_t *client)
 {
-	uint64_t nb;
+	uint16_t port;
 	uint64_t fsize;
-	uint32_t chksum;
 	char *filename;
-	int fd;
+	uint64_t chksum;
 
-	lbuffer_read(&client->buffer, &nb, sizeof(nb));
-	printf("%s: [%lu]\n", __FUNCTION__, nb);
-	while (nb > 0) {
-		lbuffer_read(&client->buffer, &fsize, sizeof(fsize));
-		receive_str(client, &filename);
-		lbuffer_read(&client->buffer, &chksum, sizeof(chksum));
-		fd = open(filename, O_WRONLY | O_CREAT, 0666);
-		if (fd == -1)
-			return;
-		lbuffer_fdread(&client->buffer, fd, fsize);
-		printf("{%lu bytes, \"%s\", %u sum}\n", fsize, filename,
-		       chksum);
-		free(filename);
-		close(fd);
-		--nb;
-	}
+	lbuffer_read(&client->buffer, &port, sizeof(port));
+	lbuffer_read(&client->buffer, &fsize, sizeof(fsize));
+	receive_str(client, &filename);
+	lbuffer_read(&client->buffer, &chksum, sizeof(chksum));
+	printf("%s: %u, %luo, %lu\n", filename, port, fsize, chksum);
+	free(filename);
 }
 
 void start_receiver(lclient_t *client)

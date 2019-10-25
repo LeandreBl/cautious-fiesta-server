@@ -1,6 +1,7 @@
 #include <iostream>
 #include <boost/bind.hpp>
 #include <memory>
+#include <filesystem>
 
 #include "Server.hpp"
 
@@ -8,7 +9,7 @@ namespace cf
 {
 Server::Server(uint16_t tcpPort, uint16_t udpPort) noexcept
     : _tcpPort(tcpPort), _udpPort(udpPort), _service(), _listener(_service),
-      _pending(), _connectionPool(), _running(false)
+      _pending(), _connectionPool(), _assetsHandlers(), _running(false)
 {
 	try {
 		_listener = std::move(tcp::acceptor(
@@ -21,8 +22,7 @@ Server::Server(uint16_t tcpPort, uint16_t udpPort) noexcept
 	autoBind(cf::LOGOUT, &Server::logoutHandler);
 	autoBind(cf::CREATE_GAMEROOM, &Server::createGameRoomHandler);
 	autoBind(cf::DELETE_GAMEROOM, &Server::deleteGameRoomHandler);
-	autoBind(cf::GET_GAMEROOMS_LIST,
-		 &Server::getGameRoomsHandler);
+	autoBind(cf::GET_GAMEROOMS_LIST, &Server::getGameRoomsHandler);
 	autoBind(cf::JOIN_GAMEROOM, &Server::joinGameRoomHandler);
 	autoBind(cf::LEAVE_GAMEROOM, &Server::leaveGameRoomHandler);
 	autoBind(cf::GET_GAMEROOM_PLAYERS_LIST,
@@ -83,4 +83,49 @@ void Server::stop() noexcept
 	_service.stop();
 	_running = false;
 }
+
+uint64_t Server::easyChksum(const std::string &filename) noexcept
+{
+	std::ifstream file;
+	char buffer[4096];
+	uint64_t chk = 0;
+
+	file.open(filename);
+	if (!file.is_open())
+		return 0;
+	std::streamsize rd;
+	do {
+		rd = file.readsome(buffer, sizeof(buffer));
+		for (std::streamsize i = 0; i < rd; ++i)
+			chk += ~buffer[i] & 0xF0F0F0F0F;
+	} while (rd == sizeof(buffer));
+	return chk;
+}
+
+boost::asio::io_service &Server::getService() noexcept
+{
+	return _service;
+}
+
+AssetHandler::AssetHandler(Server &server, const std::string &filename) noexcept
+    : port(0), filesize(0), filename(filename), chksum(0),
+      receiver(server.getService()),
+      acceptor(server.getService(), tcp::endpoint(tcp::v4(), 0)), server(server)
+{
+	this->filesize =
+		std::filesystem::file_size(this->filename);
+	this->port = this->acceptor.local_endpoint().port();
+	this->chksum = server.easyChksum(this->filename);
+}
+
+AssetHandler &AssetHandler::operator=(AssetHandler &v)
+{
+	return v;
+}
+
+void AssetHandler::operator=(AssetHandler &&v)
+{
+	*this = std::move(v);
+}
+
 } // namespace cf

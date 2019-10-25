@@ -4,6 +4,12 @@ project("cautious-server" CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS "8.0.0")
+    message(FATAL_ERROR "Insufficient gcc version")
+  endif()
+endif()
+
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
@@ -24,4 +30,4 @@ include_directories(${Boost_INCLUDE_DIR})
 link_directories(${Boost_LIBRARY_DIR})
 add_executable("cautious-server" ${SRCS} ${HDRS})
 target_include_directories("cautious-server" PRIVATE "./include" ${Boost_INCLUDE_DIRS} "sfml-scene/include" "discord-rpc/include")
-target_link_libraries("cautious-server" ${CONAN_LIBS} ${Boost_LIBRARIES} asan stdc++fs sfml-scene discord-rpc sfml-graphics sfml-system sfml-network sfml-audio)
+target_link_libraries("cautious-server" ${CONAN_LIBS} ${Boost_LIBRARIES} asan stdc++fs sfml-scene discord-rpc sfml-graphics sfml-system sfml-network sfml-audio stdc++fs)
