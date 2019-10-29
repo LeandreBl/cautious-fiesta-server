@@ -63,6 +63,7 @@
 		"typeindex": "cpp",
 		"typeinfo": "cpp",
 		"valarray": "cpp",
-		"filesystem": "cpp"
+		"filesystem": "cpp",
+		"bit": "cpp"
 	}
 }

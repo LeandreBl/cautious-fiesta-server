@@ -70,6 +70,9 @@ class Server
 	void resendGameRoomsHandler() noexcept;
 	void resendPlayerListHandler() noexcept;
 	void sendRequiredAssets(PlayerConnection &handle) noexcept;
+	void startGameRoom(const GameRoom &room) noexcept;
+
+	int deleteGameRoom(const std::string &name) noexcept;
 
 	void fillGameRooms(Serializer &packet) const noexcept;
 	void fillGameRoomPlayers(const std::string &roomName,
@@ -92,6 +95,8 @@ class Server
 	void assetWriterCallback(AssetHandler &handler,
 				 const boost::system::error_code &err);
 
+	void gameRoomTermination(GameRoom &room);
+
 	std::function<int(PlayerConnection &handle, Serializer &toRead)>
 		_callbacks[cf::ACK + 1];
 	uint16_t _tcpPort;
@@ -101,6 +106,7 @@ class Server
 	std::unique_ptr<tcp::socket> _pending;
 	std::list<PlayerConnection> _connectionPool;
 	std::list<GameRoom> _gameRooms;
+	std::list<GameRoom> _runningGameRooms;
 	std::vector<AssetHandler> _assetsHandlers;
 	bool _running;
 };

@@ -95,8 +95,11 @@ bool PlayerConnection::isLogged() const noexcept
 
 int PlayerConnection::writeTcp(const Serializer &serializer) noexcept
 {
+	boost::system::error_code err;
 	size_t n = _tcpSocket->write_some(boost::asio::buffer(
-		serializer.getNativeHandle(), serializer.getSize()));
+		serializer.getNativeHandle(), serializer.getSize()), err);
+	if (err)
+		return -1;
 	if (n != serializer.getSize()) {
 		_server.kick(*this);
 		return -1;

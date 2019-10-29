@@ -51,8 +51,7 @@ void Server::run() noexcept
 void Server::refreshTcpConnections() noexcept
 {
 	for (auto &&i : _connectionPool)
-		if (i.isLogged())
-			i.refreshTcp();
+		i.refreshTcp();
 }
 
 void Server::handleNewConnection()
@@ -72,6 +71,7 @@ void Server::kick(PlayerConnection &handle) noexcept
 		if (handle.getId() == it->getId()) {
 			say(true, "%s: disconnected\n", it->getIp().c_str());
 			it->close();
+			it->leaveRoom();
 			_connectionPool.erase(it);
 			return;
 		}
@@ -112,8 +112,7 @@ AssetHandler::AssetHandler(Server &server, const std::string &filename) noexcept
       receiver(server.getService()),
       acceptor(server.getService(), tcp::endpoint(tcp::v4(), 0)), server(server)
 {
-	this->filesize =
-		std::filesystem::file_size(this->filename);
+	this->filesize = std::filesystem::file_size(this->filename);
 	this->port = this->acceptor.local_endpoint().port();
 	this->chksum = server.easyChksum(this->filename);
 }

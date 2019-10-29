@@ -88,18 +88,22 @@ int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 		say(false, "~%s logged out\n", handle.name().c_str());
 		return 0;
 	}
+	handle.name("");
 	if (handle.isInRoom()) {
 		Serializer answer;
-		fillGameRoomPlayers(handle.room().getName(), answer);
-		handle.room().sendAllTcp(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
+		auto &room = handle.room();
+		room.leave(handle);
+		fillGameRoomPlayers(room.getName(), answer);
+		room.sendAllTcp(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
 		answer.clear();
 		fillGameRooms(answer);
-		handle.room().sendAllTcp(answer, cf::GET_GAMEROOMS_LIST);
-		handle.room().leave(handle);
+		for (auto &&i : _connectionPool) {
+			i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+			i.refreshTcp();
+		}
 	}
 	handle.refreshTcp();
 	say(true, "~%s logged out\n", handle.name().c_str());
-	handle.name("");
 	return 1;
 }
 
@@ -108,6 +112,8 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	Serializer answer;
 	std::string name;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(name))
 		return -1;
 	for (auto &&i : _gameRooms) {
@@ -130,7 +136,7 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
 {
 	Serializer packet;
-	auto room = handle.room();
+	auto &room = handle.room();
 
 	packet.set(true);
 	for (auto &&i : room.getPlayers()) {
@@ -139,26 +145,40 @@ void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
 	}
 }
 
+int Server::deleteGameRoom(const std::string &name) noexcept
+{
+	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it)
+		if (it->getName() == name) {
+			say(true, "{%s} deleted\n", name.c_str());
+			_gameRooms.erase(it);
+			return 0;
+		}
+	for (auto it = _runningGameRooms.begin(); it != _runningGameRooms.end();
+	     ++it)
+		if (it->getName() == name) {
+			say(true, "{%s} deleted\n", name.c_str());
+			_runningGameRooms.erase(it);
+			return 0;
+		}
+	return -1;
+}
+
 int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (handle.isInRoom() == false) {
 		answer.set(false);
 		handle.pushPacket(answer, cf::DELETE_GAMEROOM);
 		return 0;
 	}
-	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it) {
-		if (it->getName() == handle.room().getName()) {
-			answer.set(true);
-			handle.pushPacket(answer, cf::DELETE_GAMEROOM);
-			say(true, "{%s} deleted\n",
-			    handle.room().getName().c_str());
-			kickRoomPlayers(handle);
-			_gameRooms.erase(it);
-			resendGameRoomsHandler();
-			return 0;
-		}
+	if (deleteGameRoom(handle.room().getName()) == 0) {
+		answer.set(true);
+		handle.pushPacket(answer, cf::DELETE_GAMEROOM);
+		resendGameRoomsHandler();
+		return 0;
 	}
 	say(false, "[%s] {%s} not found\n", __FUNCTION__,
 	    handle.room().getName().c_str());
@@ -169,6 +189,8 @@ int Server::getGameRoomsHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
+	if (handle.isLogged() == false)
+		return 0;
 	fillGameRooms(answer);
 	handle.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
 	return 0;
@@ -179,6 +201,8 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	Serializer answer;
 	std::string name;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(name))
 		return -1;
 	for (auto &&i : _gameRooms) {
@@ -203,6 +227,8 @@ int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &)
 	Serializer answer;
 	uint8_t ok = handle.isInRoom();
 
+	if (handle.isLogged() == false)
+		return 0;
 	answer.set(ok);
 	if (ok == true) {
 		say(ok, "~%s left {%s}\n", handle.name().c_str(),
@@ -221,6 +247,8 @@ int Server::getGameRoomPlayersListHandler(PlayerConnection &handle,
 	Serializer answer;
 	std::string name;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(name))
 		return -1;
 	fillGameRoomPlayers(name, answer);
@@ -234,6 +262,8 @@ int Server::sendGameRoomMessageHandler(PlayerConnection &handle,
 	Serializer answer;
 	std::string message;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(message))
 		return -1;
 	if (handle.isInRoom() == false) {
@@ -268,19 +298,60 @@ void Server::resendPlayerListHandler() noexcept
 	}
 }
 
+static bool isStarting(const std::vector<PlayerConnection *> &v) noexcept
+{
+	for (auto &&i : v)
+		if (i->ready() == false)
+			return false;
+	return true;
+}
+
+void Server::startGameRoom(const GameRoom &room) noexcept
+{
+	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it) {
+		if (it->getName() == room.getName()) {
+			_runningGameRooms.splice(_runningGameRooms.end(),
+						 _gameRooms, it);
+			_runningGameRooms.back().start(
+				std::bind(&Server::gameRoomTermination, this,
+					  std::placeholders::_1));
+			return;
+		}
+	}
+}
+
+void Server::gameRoomTermination(GameRoom &room)
+{
+	for (auto it = _runningGameRooms.begin(); it != _runningGameRooms.end();
+	     ++it) {
+		if (it->getName() == room.getName()) {
+			_runningGameRooms.erase(it);
+			return;
+		}
+	}
+}
+
 int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
+	bool start = false;
 
-	if (handle.isInRoom() == false)
+	if (handle.isLogged() == false)
+		return 0;
+	else if (handle.isInRoom() == false) {
 		handle.ready(false);
-	else
+	} else {
 		handle.ready(!handle.ready());
+		start = isStarting(handle.room().getPlayers());
+	}
 	answer.set(handle.ready());
 	handle.pushPacket(answer, cf::TOGGLE_READY);
 	say(true, "~%s: %s\n", handle.name().c_str(),
 	    (handle.ready() ? "ready" : "not ready"));
 	resendPlayerListHandler();
+	if (start == true) {
+		startGameRoom(handle.room());
+	}
 	return 0;
 }
 
@@ -288,10 +359,13 @@ int Server::requireAssetHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	uint8_t state;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(state))
 		return -1;
 	handle.assetReady(state);
-	say(state, "~%s: assets ready\n", (state == true) ? "true" : "false");
+	say(state, "~%s: assets ready: %s\n", handle.name().c_str(),
+	    (state == true) ? "true" : "false");
 	return 0;
 }
 
@@ -365,6 +439,8 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 	std::string filename;
 	Serializer answer;
 
+	if (handle.isLogged() == false)
+		return 0;
 	if (!toRead.get(filename))
 		return -1;
 	if (std::filesystem::is_regular_file(filename) == false) {
@@ -392,8 +468,9 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 
 int Server::gameStartHandler(PlayerConnection &handle, Serializer &toRead)
 {
-	(void)handle;
 	(void)toRead;
+	say(false, "~%s: error: this packet is only sent by the server.\n",
+	    handle.name().c_str());
 	return 0;
 }
 

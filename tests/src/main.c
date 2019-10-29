@@ -160,9 +160,9 @@ void create_receiver(lclient_t *client)
 
 void delete_sender(lclient_t *client, const char *argument, packet_t *header)
 {
-	header->len = strlen(argument) + 8;
+	(void)argument;
+	header->len = 0;
 	send_header(client, header);
-	send_str(client, argument);
 }
 
 void delete_receiver(lclient_t *client)
