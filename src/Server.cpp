@@ -116,15 +116,4 @@ AssetHandler::AssetHandler(Server &server, const std::string &filename) noexcept
 	this->port = this->acceptor.local_endpoint().port();
 	this->chksum = server.easyChksum(this->filename);
 }
-
-AssetHandler &AssetHandler::operator=(AssetHandler &v)
-{
-	return v;
-}
-
-void AssetHandler::operator=(AssetHandler &&v)
-{
-	*this = std::move(v);
-}
-
 } // namespace cf

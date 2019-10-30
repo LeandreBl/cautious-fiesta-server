@@ -1,4 +1,5 @@
 #include <filesystem>
+#include <boost/bind.hpp>
 
 #include "Server.hpp"
 
@@ -416,11 +417,15 @@ void Server::assetWriterCallback(AssetHandler &handler,
 	}
 }
 
-void Server::assetListenerCallback(AssetHandler &handler)
+void Server::assetListenerCallback(AssetHandler &handler,
+				   const boost::system::error_code &err)
 {
-	say(true, "$%u sending asset \"%s\".\n", handler.port,
-	    handler.filename.c_str());
+	say(!err, "$%u sending asset \"%s\" %s.\n", handler.port,
+	    handler.filename.c_str(), err.message().c_str());
 	handler.acceptor.close();
+	if (err) {
+		return;
+	}
 	handler.file.open(handler.filename);
 	assetWriterCallback(handler, boost::system::error_code());
 }
@@ -460,9 +465,10 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 	handle.pushPacket(answer, cf::ASSETS_SEND);
 	say(true, "~%s: asset \"%s\" on port %u.\n", handle.name().c_str(),
 	    l.filename.c_str(), l.port);
-	l.acceptor.async_accept(
-		l.receiver,
-		std::bind(&Server::assetListenerCallback, this, std::ref(l)));
+	l.acceptor.async_accept(l.receiver,
+				boost::bind(&Server::assetListenerCallback,
+					    this, std::ref(l),
+					    boost::asio::placeholders::error));
 	return 0;
 }
 

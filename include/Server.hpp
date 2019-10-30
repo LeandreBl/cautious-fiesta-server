@@ -17,9 +17,6 @@ namespace cf
 class Server;
 struct AssetHandler {
 	AssetHandler(Server &server, const std::string &filename) noexcept;
-	AssetHandler(AssetHandler &&handler) = default;
-	AssetHandler &operator=(AssetHandler &v);
-	void operator=(AssetHandler &&v);
 	uint16_t port;
 	uint64_t filesize;
 	std::string filename;
@@ -91,7 +88,8 @@ class Server
 		trace(format, args...);
 	}
 
-	void assetListenerCallback(AssetHandler &handler);
+	void assetListenerCallback(AssetHandler &handler,
+				   const boost::system::error_code &err);
 	void assetWriterCallback(AssetHandler &handler,
 				 const boost::system::error_code &err);
 
@@ -107,7 +105,7 @@ class Server
 	std::list<PlayerConnection> _connectionPool;
 	std::list<GameRoom> _gameRooms;
 	std::list<GameRoom> _runningGameRooms;
-	std::vector<AssetHandler> _assetsHandlers;
+	std::list<AssetHandler> _assetsHandlers;
 	bool _running;
 };
 } // namespace cf
