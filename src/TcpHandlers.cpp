@@ -315,7 +315,7 @@ void Server::startGameRoom(const GameRoom &room) noexcept
 						 _gameRooms, it);
 			_runningGameRooms.back().start(
 				std::bind(&Server::gameRoomTermination, this,
-					  std::placeholders::_1));
+					  std::placeholders::_1), 2225);
 			return;
 		}
 	}

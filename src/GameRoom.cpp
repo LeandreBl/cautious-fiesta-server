@@ -6,7 +6,8 @@
 
 namespace cf
 {
-GameRoom::GameRoom(const std::string &name) noexcept : _name(name), _players()
+GameRoom::GameRoom(const std::string &name) noexcept
+    : _name(name), _players(), _isRunning(false)
 {
 }
 
@@ -62,17 +63,26 @@ void GameRoom::leave(PlayerConnection &handle) noexcept
 
 class Timer : public sfs::GameObject
 {
-	public:
+      public:
+	Timer(PlayerConnection &p) noexcept : _player(p)
+	{
+	}
 	void update(sfs::Scene &scene) noexcept
 	{
 		_prev += scene.deltaTime();
 		if (_prev >= 1.f) {
-			std::cout << scene.realTime() << std::endl;
+			Serializer a;
+			float t = scene.realTime();
+			a.set((uint32_t)UdpPrctl::timeType::REALTIME);
+			a.set(t);
+			_player.pushUdp(a, UdpPrctl::TIME);
+			_player.refreshUdp();
 			_prev = 0;
 		}
 		if (scene.realTime() > 5.f)
 			scene.close();
 	}
+	PlayerConnection &_player;
 	float _prev = 0;
 };
 
@@ -80,13 +90,23 @@ void GameRoom::scene() noexcept
 {
 	sfs::Scene scene(_name, 60);
 
-	scene.addGameObject<Timer>();
+	scene.addGameObject<Timer>(*_players.front());
 	scene.run();
 	_endCallback(*this);
 }
 
-void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcept
+void GameRoom::start(const std::function<void(GameRoom &)> &endCallback,
+		     uint16_t port) noexcept
 {
+	Serializer packet;
+
+	_isRunning = true;
+	packet.set(port);
+	for (auto &&i : _players) {
+		i->pushPacket(packet, cf::GAME_STARTED);
+		i->refreshTcp();
+		i->setUdpPort(port);
+	}
 	_endCallback = std::move(endCallback);
 	_thread = std::make_unique<std::thread>(
 		std::bind(&GameRoom::scene, this));
@@ -95,4 +115,8 @@ void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcep
 	      _name.c_str(), _players.size());
 }
 
+bool GameRoom::isRunning() const noexcept
+{
+	return _isRunning;
+}
 } // namespace cf

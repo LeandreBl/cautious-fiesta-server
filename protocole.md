@@ -165,6 +165,13 @@
     uint64_t checksum;
    }
 ```
+>Game start
+```
+-> [header]: { GAME_STARTED }
+   [payload]: {
+    uint16_t udpPort;
+   }
+```
 >Acknowledge :
 ```
 <- [header]: { ACK }

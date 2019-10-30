@@ -24,7 +24,7 @@ const char *pktTypeToString[] = {
 
 TcpPacketHeader::TcpPacketHeader(enum pktType_e type, uint64_t pktLen) noexcept
 {
-	_header.magic = cf::MAGIC;
+	_header.magic = TCP_MAGIC;
 	_header.pktType = type;
 	_header.pktLen = pktLen;
 }
@@ -46,7 +46,7 @@ uint32_t TcpPacketHeader::getMagic() const noexcept
 
 bool TcpPacketHeader::isCorrect() const noexcept
 {
-	return _header.magic == cf::MAGIC && _header.pktType <= cf::ACK;
+	return _header.magic == TCP_MAGIC && _header.pktType <= cf::ACK;
 }
 
 pktTcpHeader_t &TcpPacketHeader::getNativeHandle() noexcept
@@ -61,7 +61,7 @@ const pktTcpHeader_t &TcpPacketHeader::getNativeHandle() const noexcept
 
 void TcpPacketHeader::display(bool rcv) const noexcept
 {
-	trace(true,
+	trace(isCorrect(),
 	      "%c-%sTcpPacket%s: {%smagic%s: %s0x%x%s, %spktLen%s: %s% -3lu%s, %spktType%s: \"%s%s%s\"}\n",
 	      (rcv == true) ? '<' : '>', MAGENTA, RESET, YELLOW, RESET, CYAN,
 	      _header.magic, RESET, YELLOW, RESET, CYAN, _header.pktLen, RESET,

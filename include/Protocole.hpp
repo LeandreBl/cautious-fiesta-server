@@ -5,7 +5,6 @@
 
 namespace cf
 {
-constexpr uint32_t MAGIC = 0x0b3a4;
 
 typedef struct pktTcpHeader_s {
 	uint32_t magic;
@@ -32,6 +31,8 @@ enum pktType_e {
 };
 
 extern const char *pktTypeToString[];
+
+constexpr uint32_t TCP_MAGIC = 0x0b3a4;
 
 class TcpPacketHeader
 {

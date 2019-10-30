@@ -8,8 +8,9 @@ namespace cf
 {
 PlayerConnection::PlayerConnection(std::unique_ptr<tcp::socket> &socket,
 				   Server &server) noexcept
-    : _header(), _rd(0), _buffer(), _toRead(0), _payload(), _name(""),
-      _udpSocket(), _tcpSocket(std::move(socket)), _room(nullptr), _toWrite(),
+    : _service(), _header(), _rd(0), _buffer(), _toRead(0), _payload(),
+      _name(""), _udpSocket(), _udpIndex(0), _udpRemote(),
+      _tcpSocket(std::move(socket)), _room(nullptr), _toWrite(),
       _server(server), _player(), _ready(false)
 {
 	headerMode();
@@ -96,8 +97,10 @@ bool PlayerConnection::isLogged() const noexcept
 int PlayerConnection::writeTcp(const Serializer &serializer) noexcept
 {
 	boost::system::error_code err;
-	size_t n = _tcpSocket->write_some(boost::asio::buffer(
-		serializer.getNativeHandle(), serializer.getSize()), err);
+	size_t n = _tcpSocket->write_some(
+		boost::asio::buffer(serializer.getNativeHandle(),
+				    serializer.getSize()),
+		err);
 	if (err)
 		return -1;
 	if (n != serializer.getSize()) {
@@ -191,6 +194,43 @@ void PlayerConnection::setPlayer(const Player::stats &stats) noexcept
 Player &PlayerConnection::getPlayer() noexcept
 {
 	return _player;
+}
+
+void PlayerConnection::setUdpPort(uint16_t port) noexcept
+{
+	_udpSocket = std::make_unique<udp::socket>(_service);
+	_udpSocket->open(udp::v4());
+	_udpRemote =
+		udp::endpoint(_tcpSocket->local_endpoint().address(), port);
+}
+
+void PlayerConnection::pushUdp(Serializer &packet,
+			       enum UdpPrctl::type type) noexcept
+{
+	_toWriteUdp.emplace(packet, type, _udpIndex++);
+}
+
+void PlayerConnection::refreshUdp() noexcept
+{
+	while (_toWriteUdp.size()) {
+		auto &pkt = _toWriteUdp.front();
+		if (writeUdp(pkt) != 0)
+			return;
+		_toWriteUdp.pop();
+	}
+}
+
+int PlayerConnection::writeUdp(const Serializer &serializer) noexcept
+{
+	boost::system::error_code err;
+	_udpSocket->send_to(boost::asio::buffer(serializer.getNativeHandle(),
+						serializer.getSize()),
+			    _udpRemote, MSG_CONFIRM, err);
+	if (err) {
+		std::cerr << err.message() << std::endl;
+		return -1;
+	}
+	return 0;
 }
 
 } // namespace cf

@@ -23,6 +23,16 @@ Serializer::Serializer(const Serializer &packet,
 	nativeSet(packet._data, packet._size);
 }
 
+Serializer::Serializer(const Serializer &packet, enum UdpPrctl::type type,
+		       uint16_t index) noexcept
+    : _data(nullptr), _size(0), _alloc_size(0)
+{
+	UdpPrctl header(type, packet._size, index);
+	auto *p = header.getPackedData();
+	nativeSet(p, sizeof(*p));
+	nativeSet(packet._data, packet._size);
+}
+
 Serializer::Serializer(const Serializer &packet) noexcept
     : _data(nullptr), _size(0), _alloc_size(0)
 {
@@ -46,6 +56,7 @@ void Serializer::clear() noexcept
 {
 	_size = 0;
 }
+
 int Serializer::resizeForNewElement(size_t newElementSize) noexcept
 {
 	if (_alloc_size - _size >= newElementSize)

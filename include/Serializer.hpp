@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include "Protocole.hpp"
+#include "Udp.h"
 #include "Asset.hpp"
 
 namespace cf
@@ -18,8 +19,9 @@ class Serializer
 	Serializer() noexcept;
 	~Serializer() noexcept;
 	Serializer(const Serializer &packet) noexcept;
-	Serializer(const Serializer &packet,
-			       enum pktType_e pktType) noexcept;
+	Serializer(const Serializer &packet, enum pktType_e pktType) noexcept;
+	Serializer(const Serializer &packet, enum UdpPrctl::type type,
+		   uint16_t index) noexcept;
 	void clear() noexcept;
 	void setHeader(enum pktType_e pktType) noexcept;
 	bool set(const std::string &str) noexcept;

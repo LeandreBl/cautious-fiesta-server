@@ -7,6 +7,7 @@
 #include "Serializer.hpp"
 #include "Protocole.hpp"
 #include "Player.hpp"
+#include "Udp.h"
 
 namespace cf
 {
@@ -39,6 +40,9 @@ class PlayerConnection
 	void close() noexcept;
 	void pushPacket(Serializer &packet, enum pktType_e type) noexcept;
 	void refreshTcp() noexcept;
+	void setUdpPort(uint16_t port) noexcept;
+	void pushUdp(Serializer &packet, enum UdpPrctl::type type) noexcept;
+	void refreshUdp() noexcept;
 	void setPlayer(const Player::stats &stats) noexcept;
 	Player &getPlayer() noexcept;
       protected:
@@ -47,8 +51,10 @@ class PlayerConnection
 	void asyncReadPayload(const boost::system::error_code &error,
 			      std::size_t bytes_transferred);
 	int writeTcp(const Serializer &serializer) noexcept;
+	int writeUdp(const Serializer &serializer) noexcept;
 	void headerMode() noexcept;
 	void packetMode() noexcept;
+	boost::asio::io_service _service;
 	TcpPacketHeader _header;
 	size_t _rd;
 	std::array<uint8_t, 4096> _buffer;
@@ -56,9 +62,12 @@ class PlayerConnection
 	Serializer _payload;
 	std::string _name;
 	std::unique_ptr<udp::socket> _udpSocket;
+	uint16_t _udpIndex;
+	udp::endpoint _udpRemote;
 	std::unique_ptr<tcp::socket> _tcpSocket;
 	GameRoom *_room;
 	std::queue<Serializer> _toWrite;
+	std::queue<Serializer> _toWriteUdp;
 	Server &_server;
 	Player _player;
 	bool _ready;

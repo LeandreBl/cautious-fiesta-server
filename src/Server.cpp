@@ -66,6 +66,8 @@ void Server::handleNewConnection()
 
 void Server::kick(PlayerConnection &handle) noexcept
 {
+	if (handle.isInRoom() && handle.room().isRunning())
+		return;
 	for (auto it = _connectionPool.begin(); it != _connectionPool.end();
 	     ++it) {
 		if (handle.getId() == it->getId()) {

@@ -17,7 +17,9 @@ class GameRoom
 	const std::vector<PlayerConnection *> &getPlayers() const noexcept;
 	void join(PlayerConnection &handle) noexcept;
 	void leave(PlayerConnection &handle) noexcept;
-	void start(const std::function<void(GameRoom &)> &endCallback) noexcept;
+	void start(const std::function<void(GameRoom &)> &endCallback,
+		   uint16_t port) noexcept;
+	bool isRunning() const noexcept;
 
       protected:
 	void scene() noexcept;
@@ -25,5 +27,6 @@ class GameRoom
 	std::vector<PlayerConnection *> _players;
 	std::unique_ptr<std::thread> _thread;
 	std::function<void(GameRoom &)> _endCallback;
+	bool _isRunning;
 };
 } // namespace cf
