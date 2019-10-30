@@ -55,6 +55,7 @@ void GameRoom::leave(PlayerConnection &handle) noexcept
 {
 	for (auto it = _players.begin(); it != _players.end(); ++it) {
 		if ((*it)->getId() == handle.getId()) {
+			(*it)->ready(false);
 			_players.erase(it);
 			return;
 		}

@@ -90,6 +90,7 @@ int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 		return 0;
 	}
 	handle.name("");
+	handle.ready(false);
 	if (handle.isInRoom()) {
 		Serializer answer;
 		auto &room = handle.room();
