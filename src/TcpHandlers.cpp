@@ -73,7 +73,7 @@ void Server::resendGameRoomsHandler() noexcept
 
 	fillGameRooms(answer);
 	for (auto &&i : _connectionPool) {
-		if (i.isLogged())
+		if (i.isLogged() && (!i.isInRoom() || !i.room().isRunning()))
 			i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
 	}
 }
@@ -100,8 +100,10 @@ int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 		answer.clear();
 		fillGameRooms(answer);
 		for (auto &&i : _connectionPool) {
-			i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
-			i.refreshTcp();
+			if (!i.isInRoom() || !i.room().isRunning()) {
+				i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+				i.refreshTcp();
+			}
 		}
 	}
 	handle.refreshTcp();
@@ -292,7 +294,7 @@ int Server::receiveGameRoomMessageHandler(PlayerConnection &, Serializer &)
 void Server::resendPlayerListHandler() noexcept
 {
 	for (auto &&i : _connectionPool) {
-		if (i.isInRoom()) {
+		if (i.isInRoom() && !i.room().isRunning()) {
 			Serializer answer;
 			fillGameRoomPlayers(i.room().getName(), answer);
 			i.pushPacket(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
@@ -316,7 +318,8 @@ void Server::startGameRoom(const GameRoom &room) noexcept
 						 _gameRooms, it);
 			_runningGameRooms.back().start(
 				std::bind(&Server::gameRoomTermination, this,
-					  std::placeholders::_1), 2225);
+					  std::placeholders::_1),
+				2225);
 			return;
 		}
 	}
