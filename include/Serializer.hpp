@@ -7,6 +7,9 @@
 #include <memory>
 #include <fstream>
 
+#include <BasicShape.hpp>
+#include <Velocity.hpp>
+
 #include "Protocole.hpp"
 #include "Udp.h"
 #include "Asset.hpp"
@@ -27,6 +30,9 @@ class Serializer
 	bool set(const std::string &str) noexcept;
 	bool set(const TcpPacketHeader &header) noexcept;
 	bool set(const Asset &asset) noexcept;
+	bool set(const sf::Vector2f &v) noexcept;
+	bool set(const sfs::Sprite &sprite) noexcept;
+	bool set(const sfs::Velocity &velocity) noexcept;
 	template <typename T> bool set(const std::vector<T> &vec)
 	{
 		if (!nativeSet(vec.size()))
@@ -43,6 +49,9 @@ class Serializer
 	bool get(const Asset &asset) noexcept;
 	bool get(std::string &str) noexcept;
 	bool get(void *dest, size_t len) noexcept;
+	bool get(sf::Vector2f &v) noexcept;
+	bool get(sfs::Sprite &sprite) noexcept;
+	bool get(sfs::Velocity &velocity) noexcept;
 	template <typename T> bool get(T &dest) noexcept
 	{
 		return get(&dest, sizeof(dest));

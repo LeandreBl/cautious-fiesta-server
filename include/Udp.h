@@ -34,7 +34,8 @@ class UdpPrctl
 		float rotation;
 	};
 	enum objType {
-
+		PLAYER,
+		WALL,
 	};
 	struct udpSpawnObject {
 		uint32_t type;

@@ -155,4 +155,52 @@ size_t Serializer::getSize() const noexcept
 {
 	return _size;
 }
+
+bool Serializer::set(const sf::Vector2f &v) noexcept
+{
+	return nativeSet(v.x) && nativeSet(v.y);
+}
+
+bool Serializer::set(const sfs::Sprite &sprite) noexcept
+{
+	return set(sprite.getOffset()) && set(sprite.getScale())
+	       && nativeSet(sprite.getRotation());
+}
+
+bool Serializer::get(sf::Vector2f &v) noexcept
+{
+	return get(v.x) && get(v.y);
+}
+
+bool Serializer::get(sfs::Sprite &sprite) noexcept
+{
+	float rotation;
+	sf::Vector2f scale;
+	sf::Vector2f offset;
+
+	if (!get(offset) || !get(scale) || !get(offset))
+		return false;
+	sprite.setOffset(offset);
+	sprite.setScale(scale);
+	sprite.setRotation(rotation);
+	return true;
+}
+
+bool Serializer::set(const sfs::Velocity &velocity) noexcept
+{
+	return set(velocity.getSpeed()) && set(velocity.getAcceleration());
+}
+
+bool Serializer::get(sfs::Velocity &velocity) noexcept
+{
+	sf::Vector2f speed;
+	sf::Vector2f acceleration;
+
+	if (!get(speed) || !get(acceleration))
+		return false;
+	velocity.setAcceleration(acceleration);
+	velocity.setSpeed(speed);
+	return true;
+}
+
 } // namespace cf
