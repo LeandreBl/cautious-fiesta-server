@@ -178,7 +178,7 @@ bool Serializer::get(sfs::Sprite &sprite) noexcept
 	sf::Vector2f scale;
 	sf::Vector2f offset;
 
-	if (!get(offset) || !get(scale) || !get(offset))
+	if (!get(offset) || !get(scale) || !get(rotation))
 		return false;
 	sprite.setOffset(offset);
 	sprite.setScale(scale);
