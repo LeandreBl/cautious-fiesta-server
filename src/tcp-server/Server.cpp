@@ -3,6 +3,8 @@
 #include <memory>
 #include <filesystem>
 
+#include <Asset.hpp>
+
 #include "Server.hpp"
 
 namespace cf
@@ -18,22 +20,22 @@ Server::Server(uint16_t tcpPort, uint16_t udpPort) noexcept
 		say(false, "Error: Unable to run on port %u\n", _tcpPort);
 		return;
 	}
-	autoBind(cf::LOGIN, &Server::loginHandler);
-	autoBind(cf::LOGOUT, &Server::logoutHandler);
-	autoBind(cf::CREATE_GAMEROOM, &Server::createGameRoomHandler);
-	autoBind(cf::DELETE_GAMEROOM, &Server::deleteGameRoomHandler);
-	autoBind(cf::GET_GAMEROOMS_LIST, &Server::getGameRoomsHandler);
-	autoBind(cf::JOIN_GAMEROOM, &Server::joinGameRoomHandler);
-	autoBind(cf::LEAVE_GAMEROOM, &Server::leaveGameRoomHandler);
-	autoBind(cf::GET_GAMEROOM_PLAYERS_LIST,
+	autoBind(TcpPrctl::Type::LOGIN, &Server::loginHandler);
+	autoBind(TcpPrctl::Type::LOGOUT, &Server::logoutHandler);
+	autoBind(TcpPrctl::Type::CREATE_GAMEROOM, &Server::createGameRoomHandler);
+	autoBind(TcpPrctl::Type::DELETE_GAMEROOM, &Server::deleteGameRoomHandler);
+	autoBind(TcpPrctl::Type::GET_GAMEROOMS_LIST, &Server::getGameRoomsHandler);
+	autoBind(TcpPrctl::Type::JOIN_GAMEROOM, &Server::joinGameRoomHandler);
+	autoBind(TcpPrctl::Type::LEAVE_GAMEROOM, &Server::leaveGameRoomHandler);
+	autoBind(TcpPrctl::Type::GET_GAMEROOM_PLAYERS_LIST,
 		 &Server::getGameRoomPlayersListHandler);
-	autoBind(cf::SEND_MESSAGE, &Server::sendGameRoomMessageHandler);
-	autoBind(cf::RECEIVE_MESSAGE, &Server::receiveGameRoomMessageHandler);
-	autoBind(cf::TOGGLE_READY, &Server::toggleReadyHandler);
-	autoBind(cf::GAME_STARTED, &Server::gameStartHandler);
-	autoBind(cf::ASSETS_REQUIREMENT, &Server::requireAssetHandler);
-	autoBind(cf::ASSETS_SEND, &Server::sendAssetHandler);
-	autoBind(cf::ACK, &Server::ackHandler);
+	autoBind(TcpPrctl::Type::SEND_MESSAGE, &Server::sendGameRoomMessageHandler);
+	autoBind(TcpPrctl::Type::RECEIVE_MESSAGE, &Server::receiveGameRoomMessageHandler);
+	autoBind(TcpPrctl::Type::TOGGLE_READY, &Server::toggleReadyHandler);
+	autoBind(TcpPrctl::Type::GAME_STARTED, &Server::gameStartHandler);
+	autoBind(TcpPrctl::Type::ASSETS_REQUIREMENT, &Server::requireAssetHandler);
+	autoBind(TcpPrctl::Type::ASSETS_SEND, &Server::sendAssetHandler);
+	autoBind(TcpPrctl::Type::ACK, &Server::ackHandler);
 	say(true, "Running on port %u\n", _tcpPort);
 	_running = true;
 }
@@ -86,24 +88,6 @@ void Server::stop() noexcept
 	_running = false;
 }
 
-uint64_t Server::easyChksum(const std::string &filename) noexcept
-{
-	std::ifstream file;
-	char buffer[4096];
-	uint64_t chk = 0;
-
-	file.open(filename);
-	if (!file.is_open())
-		return 0;
-	std::streamsize rd;
-	do {
-		rd = file.readsome(buffer, sizeof(buffer));
-		for (std::streamsize i = 0; i < rd; ++i)
-			chk += ~buffer[i] & 0xF0F0F0F0F;
-	} while (rd == sizeof(buffer));
-	return chk;
-}
-
 boost::asio::io_service &Server::getService() noexcept
 {
 	return _service;
@@ -116,6 +100,6 @@ AssetHandler::AssetHandler(Server &server, const std::string &filename) noexcept
 {
 	this->filesize = std::filesystem::file_size(this->filename);
 	this->port = this->acceptor.local_endpoint().port();
-	this->chksum = server.easyChksum(this->filename);
+	this->chksum = common::computeChksum(this->filename);
 }
 } // namespace cf

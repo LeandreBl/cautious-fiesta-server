@@ -31,7 +31,7 @@
 #include <lserver.h>
 #include <lstr.h>
 
-enum pktType_e {
+TcpPrctl::Type {
 	LOGIN = 0,
 	LOGOUT,
 	CREATE_GAMESESSION,

@@ -2,7 +2,7 @@
 #include <GameObject.hpp>
 
 #include "GameRoom.hpp"
-#include "Trace.hpp"
+#include <Trace.hpp>
 
 namespace cf
 {
@@ -17,14 +17,14 @@ GameRoom::~GameRoom() noexcept
 
 	packet.set(true);
 	for (auto &&i : _players) {
-		i->pushPacket(packet, cf::LEAVE_GAMEROOM);
+		i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
 		i->refreshTcp();
 		i->leaveRoom();
 	}
 	trace(true, "#%s has terminated\n", _name.c_str());
 }
 
-void GameRoom::sendAllTcp(Serializer &packet, enum pktType_e type) const
+void GameRoom::sendAllTcp(Serializer &packet, TcpPrctl::Type type) const
 	noexcept
 {
 	for (auto &&i : _players) {
@@ -74,9 +74,9 @@ class Timer : public sfs::GameObject
 		if (_prev >= 1.f) {
 			Serializer a;
 			float t = scene.realTime();
-			a.set((uint32_t)UdpPrctl::timeType::REALTIME);
+			a.set(static_cast<uint32_t>(UdpPrctl::timeType::REALTIME));
 			a.set(t);
-			_player.pushUdp(a, UdpPrctl::TIME);
+			_player.pushUdp(a, UdpPrctl::Type::TIME);
 			_player.refreshUdp();
 			_prev = 0;
 		}
@@ -104,7 +104,7 @@ void GameRoom::start(const std::function<void(GameRoom &)> &endCallback,
 	_isRunning = true;
 	packet.set(port);
 	for (auto &&i : _players) {
-		i->pushPacket(packet, cf::GAME_STARTED);
+		i->pushPacket(packet, TcpPrctl::Type::GAME_STARTED);
 		i->refreshTcp();
 		i->setUdpPort(port);
 	}

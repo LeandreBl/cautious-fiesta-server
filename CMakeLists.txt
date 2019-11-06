@@ -24,11 +24,16 @@ include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 
 conan_basic_setup()
 
-add_subdirectory(sfml-scene)
-add_subdirectory(discord-rpc)
+add_subdirectory(cautious-fiesta-common)
 
-include_directories(${Boost_INCLUDE_DIR})
+include_directories(
+	${Boost_INCLUDE_DIR}
+	"cautious-fiesta-common/include"
+	"cautious-fiesta-common/sfml-scene/include"
+	"cautious-fiesta-common/discord-rpc/include"
+)
+
 link_directories(${Boost_LIBRARY_DIR})
 add_executable("cautious-server" ${SRCS})
-target_include_directories("cautious-server" PRIVATE ${HDRS_DIRS} ${Boost_INCLUDE_DIRS} "sfml-scene/include" "discord-rpc/include")
-target_link_libraries("cautious-server" ${CONAN_LIBS} ${Boost_LIBRARIES} asan stdc++fs sfml-scene discord-rpc sfml-graphics sfml-system sfml-network sfml-audio stdc++fs)
+target_include_directories("cautious-server" PRIVATE ${HDRS_DIRS} ${Boost_INCLUDE_DIRS})
+target_link_libraries("cautious-server" ${CONAN_LIBS} ${Boost_LIBRARIES} cautious-fiesta-common asan stdc++fs sfml-scene discord-rpc sfml-graphics sfml-system sfml-network sfml-audio stdc++fs)

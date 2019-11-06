@@ -4,10 +4,11 @@
 #include <memory>
 #include <queue>
 
-#include "Serializer.hpp"
-#include "Protocole.hpp"
+#include <Serializer.hpp>
+#include <Tcp.hpp>
+#include <Udp.h>
+
 #include "Player.hpp"
-#include "Udp.h"
 
 namespace cf
 {
@@ -38,10 +39,10 @@ class PlayerConnection
 	int getId() const noexcept;
 	std::string getIp() const noexcept;
 	void close() noexcept;
-	void pushPacket(Serializer &packet, enum pktType_e type) noexcept;
+	void pushPacket(Serializer &packet, TcpPrctl::Type type) noexcept;
 	void refreshTcp() noexcept;
 	void setUdpPort(uint16_t port) noexcept;
-	void pushUdp(Serializer &packet, enum UdpPrctl::type type) noexcept;
+	void pushUdp(Serializer &packet, UdpPrctl::Type type) noexcept;
 	void refreshUdp() noexcept;
 	void setPlayer(const Player::stats &stats) noexcept;
 	Player &getPlayer() noexcept;
@@ -55,7 +56,7 @@ class PlayerConnection
 	void headerMode() noexcept;
 	void packetMode() noexcept;
 	boost::asio::io_service _service;
-	TcpPacketHeader _header;
+	TcpPrctl _header;
 	size_t _rd;
 	std::array<uint8_t, 4096> _buffer;
 	size_t _toRead;

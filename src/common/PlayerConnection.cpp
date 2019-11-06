@@ -72,7 +72,7 @@ void PlayerConnection::asyncReadHeader(const boost::system::error_code &error,
 	_rd += bytes_transferred;
 	if (_rd == sizeof(_header)) {
 		_rd = 0;
-		_toRead = _header.getLen();
+		_toRead = _header.getLength();
 		packetMode();
 		return;
 	}
@@ -156,9 +156,9 @@ void PlayerConnection::ready(bool state) noexcept
 }
 
 void PlayerConnection::pushPacket(Serializer &packet,
-				  enum pktType_e type) noexcept
+				  TcpPrctl::Type type) noexcept
 {
-	TcpPacketHeader header(type, packet.getSize());
+	TcpPrctl header(type, packet.getSize());
 	header.display(false);
 	_toWrite.emplace(packet, type);
 }
@@ -205,7 +205,7 @@ void PlayerConnection::setUdpPort(uint16_t port) noexcept
 }
 
 void PlayerConnection::pushUdp(Serializer &packet,
-			       enum UdpPrctl::type type) noexcept
+			       UdpPrctl::Type type) noexcept
 {
 	_toWriteUdp.emplace(packet, type, _udpIndex++);
 }

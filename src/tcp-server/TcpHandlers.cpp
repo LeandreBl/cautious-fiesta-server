@@ -14,7 +14,7 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 
 	if (!toRead.get(nickname) || !toRead.get(stats) || nickname.empty()) {
 		answer.set(false);
-		handle.pushPacket(answer, cf::LOGIN);
+		handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 		return -1;
 	}
 	for (auto &&i : _connectionPool) {
@@ -28,7 +28,7 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 		handle.setPlayer(stats);
 	}
 	answer.set(isOk);
-	handle.pushPacket(answer, cf::LOGIN);
+	handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 	auto &player = handle.getPlayer();
 	say(isOk,
 	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f (%.1f%%) }\n",
@@ -44,7 +44,7 @@ int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 	Serializer answer;
 
 	answer.set(ok);
-	handle.pushPacket(answer, cf::LOGOUT);
+	handle.pushPacket(answer, TcpPrctl::Type::LOGOUT);
 	if (ok == false) {
 		say(false, "~%s logged out\n", handle.name().c_str());
 		return 0;
@@ -56,12 +56,12 @@ int Server::logoutHandler(PlayerConnection &handle, Serializer &)
 		auto &room = handle.room();
 		room.leave(handle);
 		fillGameRoomPlayers(room.getName(), answer);
-		room.sendAllTcp(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
+		room.sendAllTcp(answer, TcpPrctl::Type::GET_GAMEROOM_PLAYERS_LIST);
 		answer.clear();
 		fillGameRooms(answer);
 		for (auto &&i : _connectionPool) {
 			if (!i.isInRoom() || !i.room().isRunning()) {
-				i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+				i.pushPacket(answer, TcpPrctl::Type::GET_GAMEROOMS_LIST);
 				i.refreshTcp();
 			}
 		}
@@ -83,14 +83,14 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 	for (auto &&i : _gameRooms) {
 		if (i.getName() == name) {
 			answer.set(false);
-			handle.pushPacket(answer, cf::CREATE_GAMEROOM);
+			handle.pushPacket(answer, TcpPrctl::Type::CREATE_GAMEROOM);
 			say(false, "[%s]: {%s} already exist\n", __FUNCTION__,
 			    name.c_str());
 			return 0;
 		}
 	}
 	answer.set(true);
-	handle.pushPacket(answer, cf::CREATE_GAMEROOM);
+	handle.pushPacket(answer, TcpPrctl::Type::CREATE_GAMEROOM);
 	_gameRooms.emplace_back(name);
 	resendGameRoomsHandler();
 	say(true, "{%s} created\n", name.c_str());
@@ -105,12 +105,12 @@ int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &)
 		return 0;
 	if (handle.isInRoom() == false) {
 		answer.set(false);
-		handle.pushPacket(answer, cf::DELETE_GAMEROOM);
+		handle.pushPacket(answer, TcpPrctl::Type::DELETE_GAMEROOM);
 		return 0;
 	}
 	if (deleteGameRoom(handle.room().getName()) == 0) {
 		answer.set(true);
-		handle.pushPacket(answer, cf::DELETE_GAMEROOM);
+		handle.pushPacket(answer, TcpPrctl::Type::DELETE_GAMEROOM);
 		resendGameRoomsHandler();
 		return 0;
 	}
@@ -126,7 +126,7 @@ int Server::getGameRoomsHandler(PlayerConnection &handle, Serializer &)
 	if (handle.isLogged() == false)
 		return 0;
 	fillGameRooms(answer);
-	handle.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+	handle.pushPacket(answer, TcpPrctl::Type::GET_GAMEROOMS_LIST);
 	return 0;
 }
 
@@ -143,7 +143,7 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 		if (i.getName() == name) {
 			i.join(handle);
 			answer.set(true);
-			handle.pushPacket(answer, cf::JOIN_GAMEROOM);
+			handle.pushPacket(answer, TcpPrctl::Type::JOIN_GAMEROOM);
 			resendGameRoomsHandler();
 			resendPlayerListHandler();
 			sendRequiredAssets(handle);
@@ -169,7 +169,7 @@ int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &)
 		    handle.room().getName().c_str());
 		handle.leaveRoom();
 	}
-	handle.pushPacket(answer, cf::LEAVE_GAMEROOM);
+	handle.pushPacket(answer, TcpPrctl::Type::LEAVE_GAMEROOM);
 	resendGameRoomsHandler();
 	resendPlayerListHandler();
 	return 0;
@@ -186,7 +186,7 @@ int Server::getGameRoomPlayersListHandler(PlayerConnection &handle,
 	if (!toRead.get(name))
 		return -1;
 	fillGameRoomPlayers(name, answer);
-	handle.pushPacket(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
+	handle.pushPacket(answer, TcpPrctl::Type::GET_GAMEROOM_PLAYERS_LIST);
 	return 0;
 }
 
@@ -202,22 +202,22 @@ int Server::sendGameRoomMessageHandler(PlayerConnection &handle,
 		return -1;
 	if (handle.isInRoom() == false) {
 		answer.set(false);
-		handle.pushPacket(answer, cf::SEND_MESSAGE);
+		handle.pushPacket(answer, TcpPrctl::Type::SEND_MESSAGE);
 		return 0;
 	}
 	answer.set(true);
-	handle.pushPacket(answer, cf::SEND_MESSAGE);
+	handle.pushPacket(answer, TcpPrctl::Type::SEND_MESSAGE);
 	answer.clear();
 	answer.set(handle.name());
 	answer.set(message);
-	handle.room().sendAllTcp(answer, cf::RECEIVE_MESSAGE);
+	handle.room().sendAllTcp(answer, TcpPrctl::Type::RECEIVE_MESSAGE);
 	say(true, "~%s - \"%s\"\n", handle.name().c_str(), message.c_str());
 	return 0;
 }
 
 int Server::receiveGameRoomMessageHandler(PlayerConnection &, Serializer &)
 {
-	say(false, "UNHANDLED: Received a cf::RECEIVE_MESSAGE packet\n");
+	say(false, "UNHANDLED: Received a TcpPrctl::Type::RECEIVE_MESSAGE packet\n");
 	return -1;
 }
 
@@ -227,7 +227,7 @@ void Server::resendPlayerListHandler() noexcept
 		if (i.isInRoom() && !i.room().isRunning()) {
 			Serializer answer;
 			fillGameRoomPlayers(i.room().getName(), answer);
-			i.pushPacket(answer, cf::GET_GAMEROOM_PLAYERS_LIST);
+			i.pushPacket(answer, TcpPrctl::Type::GET_GAMEROOM_PLAYERS_LIST);
 		}
 	}
 }
@@ -254,7 +254,7 @@ int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &)
 		start = isStarting(handle.room().getPlayers());
 	}
 	answer.set(handle.ready());
-	handle.pushPacket(answer, cf::TOGGLE_READY);
+	handle.pushPacket(answer, TcpPrctl::Type::TOGGLE_READY);
 	say(true, "~%s: %s\n", handle.name().c_str(),
 	    (handle.ready() ? "ready" : "not ready"));
 	resendPlayerListHandler();
@@ -310,7 +310,7 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 	answer.set(l.filesize);
 	answer.set(l.filename);
 	answer.set(l.chksum);
-	handle.pushPacket(answer, cf::ASSETS_SEND);
+	handle.pushPacket(answer, TcpPrctl::Type::ASSETS_SEND);
 	say(true, "~%s: asset \"%s\" on port %u.\n", handle.name().c_str(),
 	    l.filename.c_str(), l.port);
 	l.acceptor.async_accept(l.receiver,
@@ -332,13 +332,13 @@ int Server::ackHandler(PlayerConnection &handle, Serializer &)
 {
 	Serializer answer;
 
-	handle.pushPacket(answer, cf::ACK);
+	handle.pushPacket(answer, TcpPrctl::Type::ACK);
 	say(true, "~%s #ACK#\n", handle.name().c_str());
 	return 0;
 }
 
 int Server::packetHandler(PlayerConnection &handle,
-			  const TcpPacketHeader &packetHeader,
+			  const TcpPrctl &packetHeader,
 			  Serializer &payload) noexcept
 {
 	packetHeader.display();

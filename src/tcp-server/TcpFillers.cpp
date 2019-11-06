@@ -1,6 +1,8 @@
 #include <filesystem>
 #include <boost/bind.hpp>
 
+#include <Asset.hpp>
+
 #include "Server.hpp"
 
 namespace cf
@@ -42,7 +44,7 @@ void Server::resendGameRoomsHandler() noexcept
 	fillGameRooms(answer);
 	for (auto &&i : _connectionPool) {
 		if (i.isLogged() && (!i.isInRoom() || !i.room().isRunning()))
-			i.pushPacket(answer, cf::GET_GAMEROOMS_LIST);
+			i.pushPacket(answer, TcpPrctl::Type::GET_GAMEROOMS_LIST);
 	}
 }
 
@@ -53,7 +55,7 @@ void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
 
 	packet.set(true);
 	for (auto &&i : room.getPlayers()) {
-		i->pushPacket(packet, cf::LEAVE_GAMEROOM);
+		i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
 		i->leaveRoom();
 	}
 }
@@ -114,11 +116,11 @@ void Server::sendRequiredAssets(PlayerConnection &handle) noexcept
 			answer.set(f.path().string());
 			answer.set(static_cast<uint64_t>(f.file_size()));
 			answer.set(static_cast<uint64_t>(
-				easyChksum(f.path().string())));
+				common::computeChksum(f.path().string())));
 		}
 	}
 	answer.forceSetFirst(n);
-	handle.pushPacket(answer, cf::ASSETS_REQUIREMENT);
+	handle.pushPacket(answer, TcpPrctl::Type::ASSETS_REQUIREMENT);
 }
 
 void Server::assetWriterCallback(AssetHandler &handler,

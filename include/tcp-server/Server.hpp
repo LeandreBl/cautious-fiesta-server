@@ -4,13 +4,14 @@
 #include <string>
 #include <functional>
 #include <boost/asio.hpp>
-#include <Scene.hpp>
 
-#include "Serializer.hpp"
+#include <Serializer.hpp>
+#include <Scene.hpp>
+#include <Trace.hpp>
+#include <colors.h>
+
 #include "PlayerConnection.hpp"
 #include "GameRoom.hpp"
-#include "colors.h"
-#include "Trace.hpp"
 
 namespace cf
 {
@@ -36,11 +37,10 @@ class Server
 	void stop() noexcept;
 	void kick(PlayerConnection &handle) noexcept;
 	int packetHandler(PlayerConnection &handle,
-			  const TcpPacketHeader &packetHeader,
+			  const TcpPrctl &packetHeader,
 			  Serializer &payload) noexcept;
 	void refreshTcpConnections() noexcept;
 	boost::asio::io_service &getService() noexcept;
-	uint64_t easyChksum(const std::string &filename) noexcept;
 
       protected:
 	void kickRoomPlayers(PlayerConnection &handle) noexcept;
@@ -74,9 +74,9 @@ class Server
 	void fillGameRooms(Serializer &packet) const noexcept;
 	void fillGameRoomPlayers(const std::string &roomName,
 				 Serializer &packet) const noexcept;
-	template <typename... Args> void autoBind(size_t index, Args... args)
+	template <typename... Args> void autoBind(TcpPrctl::Type type, Args... args)
 	{
-		_callbacks[index] =
+		_callbacks[static_cast<int>(type)] =
 			std::bind(args..., this, std::placeholders::_1,
 				  std::placeholders::_2);
 	}
@@ -96,7 +96,7 @@ class Server
 	void gameRoomTermination(GameRoom &room);
 
 	std::function<int(PlayerConnection &handle, Serializer &toRead)>
-		_callbacks[cf::ACK + 1];
+		_callbacks[static_cast<int>(TcpPrctl::Type::ACK) + 1];
 	uint16_t _tcpPort;
 	uint16_t _udpPort;
 	boost::asio::io_service _service;
