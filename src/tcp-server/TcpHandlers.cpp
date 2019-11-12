@@ -9,10 +9,11 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	std::string nickname;
 	Player::stats stats;
+	sf::Color color;
 	Serializer answer;
 	uint8_t isOk = true;
 
-	if (!toRead.get(nickname) || !toRead.get(stats) || nickname.empty()) {
+	if (!toRead.get(nickname) || !toRead.get(stats) || !toRead.get(color)|| nickname.empty()) {
 		answer.set(false);
 		handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 		return -1;
@@ -25,16 +26,16 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 	}
 	if (isOk == true) {
 		handle.name(nickname);
-		handle.setPlayer(stats);
+		handle.setPlayer(stats, color);
 	}
 	answer.set(isOk);
 	handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 	auto &player = handle.getPlayer();
 	say(isOk,
-	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f (%.1f%%) }\n",
+	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f (%.1f%%), color: (r: %d, g: %d, b: %d) }\n",
 	    handle.name().c_str(), player.getLife(), player.getSpeed(),
 	    player.getAttack(), player.getAttackSpeed(), player.getArmor(),
-	    player.getArmorCoefficient());
+	    player.getArmorCoefficient(), player.getColor().r, player.getColor().g, player.getColor().b);
 	return 0;
 } // namespace cf
 

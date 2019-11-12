@@ -186,9 +186,9 @@ std::string PlayerConnection::getIp() const noexcept
 	return _tcpSocket->local_endpoint().address().to_string();
 }
 
-void PlayerConnection::setPlayer(const Player::stats &stats) noexcept
+void PlayerConnection::setPlayer(const Player::stats &stats, const sf::Color &color) noexcept
 {
-	_player = Player(_name, stats);
+	_player = Player(_name, stats, color);
 }
 
 Player &PlayerConnection::getPlayer() noexcept

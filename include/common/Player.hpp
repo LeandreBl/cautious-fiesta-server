@@ -2,6 +2,7 @@
 
 #include <string>
 #include <iostream>
+#include <SFML/Graphics.hpp>
 
 namespace cf
 {
@@ -17,7 +18,8 @@ class Player
 	};
 	struct stats &operator+=(const struct stats &src) noexcept;
 	Player(const std::string &name = "",
-	       const struct stats &stats = {0.f, 0.f, 0.f, 0.f, 0.f}) noexcept;
+	       const struct stats &stats = {0.f, 0.f, 0.f, 0.f, 0.f},
+		   const sf::Color &color = sf::Color()) noexcept;
 	const std::string &getName() const noexcept;
 	float getLife() const noexcept;
 	void inflictDamage(float amount) noexcept;
@@ -26,12 +28,14 @@ class Player
 	float getAttack() const noexcept;
 	float getAttackSpeed() const noexcept;
 	float getSpeed() const noexcept;
+	sf::Color getColor() const noexcept;
 	bool isAlive() const noexcept;
 	void levelUp(const struct stats &toAdd) noexcept;
 
       protected:
 	std::string _name;
 	struct stats _stats;
+	sf::Color _color;
 };
 
 std::ostream &operator<<(std::ostream &os, const Player &player) noexcept;

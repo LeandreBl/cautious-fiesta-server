@@ -44,7 +44,7 @@ class PlayerConnection
 	void setUdpPort(uint16_t port) noexcept;
 	void pushUdp(Serializer &packet, UdpPrctl::Type type) noexcept;
 	void refreshUdp() noexcept;
-	void setPlayer(const Player::stats &stats) noexcept;
+	void setPlayer(const Player::stats &stats, const sf::Color &color) noexcept;
 	Player &getPlayer() noexcept;
       protected:
 	void asyncReadHeader(const boost::system::error_code &error,

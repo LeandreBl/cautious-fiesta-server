@@ -16,8 +16,8 @@ struct Player::stats &operator+=(struct Player::stats &dest,
 	return dest;
 }
 
-Player::Player(const std::string &name, const struct stats &stats) noexcept
-    : _name(name), _stats(stats)
+Player::Player(const std::string &name, const struct stats &stats, const sf::Color &color) noexcept
+    : _name(name), _stats(stats), _color(color)
 {
 }
 
@@ -61,6 +61,11 @@ float Player::getAttackSpeed() const noexcept
 float Player::getSpeed() const noexcept
 {
 	return _stats.speed;
+}
+
+sf::Color Player::getColor() const noexcept
+{
+	return _color;
 }
 
 bool Player::isAlive() const noexcept
