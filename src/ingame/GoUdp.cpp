@@ -54,6 +54,24 @@ void GoUdp::onUpdate(const boost::system::error_code &error, std::size_t bytes_t
 	}
 }
 
+bool GoUdp::executePacket(PlayerConnection &connection) noexcept
+{
+	if (connection.getUdpHeader().isCorrect()
+	    && connection.getUdpHeader().getLength() >= connection.getUdpSerializer().getSize()) {
+		// dostuff
+		return true;
+	}
+	return false;
+}
+
+void GoUdp::computePackets(PlayerConnection &connection) noexcept
+{
+	executePacket(connection);
+	while (connection.getUdpSerializer().getSize() >= sizeof(UdpPrctl::udpHeader)
+	       && executePacket(connection))
+		;
+}
+
 void GoUdp::start(sfs::Scene &scene) noexcept
 {
 	(void)scene;

@@ -3,6 +3,7 @@
 #include <boost/asio.hpp>
 #include <memory>
 #include <queue>
+#include <list>
 
 #include <Serializer.hpp>
 #include <Tcp.hpp>
@@ -55,6 +56,7 @@ class PlayerConnection {
 	void refreshUdp(udp::socket &socket) noexcept;
 	UdpPrctl &getUdpHeader() noexcept;
 	void setUdpHeader(const UdpPrctl::udpHeader &header) noexcept;
+	void notifyUdpReceive(uint16_t pktIndex) noexcept;
 
       protected:
 	void asyncReadHeader(const boost::system::error_code &error, std::size_t bytes_transferred);
@@ -74,7 +76,7 @@ class PlayerConnection {
 	std::unique_ptr<tcp::socket> _tcpSocket;
 	GameRoom *_room;
 	std::queue<Serializer> _toWrite;
-	std::queue<Serializer> _toWriteUdp;
+	std::list<std::pair<UdpPrctl, Serializer>> _toWriteUdp;
 	uint16_t _udpIndex;
 	Serializer _udpSerializer;
 	Server &_server;

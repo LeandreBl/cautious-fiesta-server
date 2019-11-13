@@ -19,6 +19,8 @@ class GoUdp : public sfs::GameObject {
       private:
 	PlayerConnection *getClient(const udp::endpoint &remote) const noexcept;
 	void onUpdate(const boost::system::error_code &error, std::size_t bytes_transferred);
+	void computePackets(PlayerConnection &connection) noexcept;
+	bool executePacket(PlayerConnection &connection) noexcept;
 	void asyncReceive() noexcept;
 	boost::asio::io_service _udpService;
 	udp::endpoint _lastRemote;
