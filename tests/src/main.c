@@ -31,7 +31,7 @@
 #include <lserver.h>
 #include <lstr.h>
 
-TcpPrctl::Type {
+enum type {
 	LOGIN = 0,
 	LOGOUT,
 	CREATE_GAMESESSION,
@@ -58,8 +58,7 @@ typedef struct packet_s {
 typedef struct jumper_s {
 	uint32_t type;
 	const char *command;
-	void (*sender)(lclient_t *client, const char *argument,
-		       packet_t *header);
+	void (*sender)(lclient_t *client, const char *argument, packet_t *header);
 	void (*receiver)(lclient_t *client);
 } jumper_t;
 
@@ -72,8 +71,8 @@ void packet_create(packet_t *pkt, uint32_t type, uint32_t len)
 
 void packet_display(packet_t *packet)
 {
-	printf("PACKET: {magic: \"%x\", pktType: \"%u\", pktLen: \"%lu\"}\n",
-	       packet->magic, packet->type, packet->len);
+	printf("PACKET: {magic: \"%x\", pktType: \"%u\", pktLen: \"%lu\"}\n", packet->magic,
+	       packet->type, packet->len);
 }
 
 void send_header(lclient_t *client, packet_t *header)
@@ -225,8 +224,7 @@ void leave_receiver(lclient_t *client)
 	printf("%s: %u\n", __FUNCTION__, answer);
 }
 
-void getplayers_sender(lclient_t *client, const char *argument,
-		       packet_t *header)
+void getplayers_sender(lclient_t *client, const char *argument, packet_t *header)
 {
 	header->len = strlen(argument) + 8;
 	send_header(client, header);
@@ -358,6 +356,15 @@ void loader_receiver(lclient_t *client)
 	free(filename);
 }
 
+void start_sender(lclient_t *client, const char *argument, packet_t *header)
+{
+	uint16_t port = atoi(argument);
+
+	header->len = sizeof(port);
+	send_header(client, header);
+	write(client->socket.fd, &port, sizeof(port));
+}
+
 void start_receiver(lclient_t *client)
 {
 	uint16_t port;
@@ -373,18 +380,16 @@ static const jumper_t actions[] = {
 	{LOGOUT, "logout", &logout_sender, &logout_receiver},
 	{CREATE_GAMESESSION, "create", &create_sender, &create_receiver},
 	{DELETE_GAMESESSION, "delete", &delete_sender, &delete_receiver},
-	{GET_GAMESESSIONS_LIST, "get-games", &getgames_sender,
-	 &getgames_receiver},
+	{GET_GAMESESSIONS_LIST, "get-games", &getgames_sender, &getgames_receiver},
 	{JOIN_GAMESESSION, "join", &join_sender, &join_receiver},
 	{LEAVE_GAMESESSION, "leave", &leave_sender, &leave_receiver},
-	{GET_GAMESESSION_PLAYERS_LIST, "get-players", &getplayers_sender,
-	 &getplayers_receiver},
+	{GET_GAMESESSION_PLAYERS_LIST, "get-players", &getplayers_sender, &getplayers_receiver},
 	{SEND_MESSAGE, "send", &send_sender, &send_receiver},
 	{RECEIVE_MESSAGE, "receive", &receive_sender, &receive_receiver},
 	{TOGGLE_READY, "ready", &ready_sender, &ready_receiver},
 	{ASSETS_REQUIREMENT, "require", &require_sender, &require_receiver},
 	{ASSETS_LOADER, "loader", &loader_sender, &loader_receiver},
-	{GAME_STARTED, "start", NULL, &start_receiver},
+	{GAME_STARTED, "start", &start_sender, &start_receiver},
 	{ACK, "ack", NULL, NULL},
 	{0, "help", help, NULL},
 };
@@ -437,17 +442,13 @@ int main(void)
 	do {
 		line = readline("> ");
 		if (line != NULL) {
-			for (size_t i = 0;
-			     i < sizeof(actions) / sizeof(*actions); ++i) {
-				if (strncmp(actions[i].command, line,
-					    strlen(actions[i].command))
+			for (size_t i = 0; i < sizeof(actions) / sizeof(*actions); ++i) {
+				if (strncmp(actions[i].command, line, strlen(actions[i].command))
 				    == 0) {
 					packet_create(&header, i, 0);
-					actions[i].sender(
-						&client,
-						line + strlen(actions[i].command)
-							+ 1,
-						&header);
+					actions[i].sender(&client,
+							  line + strlen(actions[i].command) + 1,
+							  &header);
 					break;
 				}
 				if (i + 1 == sizeof(actions) / sizeof(*actions))

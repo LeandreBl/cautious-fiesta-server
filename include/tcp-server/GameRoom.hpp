@@ -22,7 +22,7 @@ class GameRoom
 	bool isRunning() const noexcept;
 
       protected:
-	void scene() noexcept;
+	void scene(uint16_t port) noexcept;
 	std::string _name;
 	std::vector<PlayerConnection *> _players;
 	std::unique_ptr<std::thread> _thread;

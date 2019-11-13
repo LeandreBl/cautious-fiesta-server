@@ -10,8 +10,7 @@
 
 #include "Player.hpp"
 
-namespace cf
-{
+namespace cf {
 /* forward declaration */
 class GameRoom;
 class Server;
@@ -19,11 +18,14 @@ class Server;
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-class PlayerConnection
-{
+struct netBuffer {
+	std::array<uint8_t, 1 << 12> buffer;
+	Serializer serializer;
+};
+
+class PlayerConnection {
       public:
-	PlayerConnection(std::unique_ptr<tcp::socket> &socket,
-			 Server &server) noexcept;
+	PlayerConnection(std::unique_ptr<tcp::socket> &socket, Server &server) noexcept;
 	~PlayerConnection() = default;
 
 	void name(const std::string &name) noexcept;
@@ -46,29 +48,35 @@ class PlayerConnection
 	void refreshUdp() noexcept;
 	void setPlayer(const Player::stats &stats, const sf::Color &color) noexcept;
 	Player &getPlayer() noexcept;
+
+	udp::endpoint &getUdpRemote() noexcept;
+	Serializer &getUdpSerializer() noexcept;
+	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
+	void refreshUdp(udp::socket &socket) noexcept;
+	UdpPrctl &getUdpHeader() noexcept;
+	void setUdpHeader(const UdpPrctl::udpHeader &header) noexcept;
+
       protected:
-	void asyncReadHeader(const boost::system::error_code &error,
-			     std::size_t bytes_transferred);
+	void asyncReadHeader(const boost::system::error_code &error, std::size_t bytes_transferred);
 	void asyncReadPayload(const boost::system::error_code &error,
 			      std::size_t bytes_transferred);
 	int writeTcp(const Serializer &serializer) noexcept;
-	int writeUdp(const Serializer &serializer) noexcept;
 	void headerMode() noexcept;
 	void packetMode() noexcept;
 	boost::asio::io_service _service;
 	TcpPrctl _header;
+	UdpPrctl _udpHeader;
 	size_t _rd;
-	std::array<uint8_t, 4096> _buffer;
+	struct netBuffer _netBuffer;
 	size_t _toRead;
-	Serializer _payload;
 	std::string _name;
-	std::unique_ptr<udp::socket> _udpSocket;
-	uint16_t _udpIndex;
 	udp::endpoint _udpRemote;
 	std::unique_ptr<tcp::socket> _tcpSocket;
 	GameRoom *_room;
 	std::queue<Serializer> _toWrite;
 	std::queue<Serializer> _toWriteUdp;
+	uint16_t _udpIndex;
+	Serializer _udpSerializer;
 	Server &_server;
 	Player _player;
 	bool _ready;

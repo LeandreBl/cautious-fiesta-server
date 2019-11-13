@@ -171,6 +171,10 @@
    [payload]: {
     uint16_t udpPort;
    }
+#optionnal <- [header]: { GAME_STARTED }
+              [payload]: {
+               uint16_t remoteUdpPort;
+			  }
 ```
 >Acknowledge :
 ```

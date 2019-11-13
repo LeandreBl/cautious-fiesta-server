@@ -3,8 +3,7 @@
 
 #include "Server.hpp"
 
-namespace cf
-{
+namespace cf {
 int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	std::string nickname;
@@ -13,7 +12,7 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 	Serializer answer;
 	uint8_t isOk = true;
 
-	if (!toRead.get(nickname) || !toRead.get(stats) || !toRead.get(color)|| nickname.empty()) {
+	if (!toRead.get(nickname) || !toRead.get(stats) || !toRead.get(color) || nickname.empty()) {
 		answer.set(false);
 		handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 		return -1;
@@ -32,10 +31,11 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 	handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 	auto &player = handle.getPlayer();
 	say(isOk,
-	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f (%.1f%%), color: (r: %d, g: %d, b: %d) }\n",
-	    handle.name().c_str(), player.getLife(), player.getSpeed(),
-	    player.getAttack(), player.getAttackSpeed(), player.getArmor(),
-	    player.getArmorCoefficient(), player.getColor().r, player.getColor().g, player.getColor().b);
+	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f "
+	    "(%.1f%%), color: (r: %d, g: %d, b: %d) }\n",
+	    handle.name().c_str(), player.getLife(), player.getSpeed(), player.getAttack(),
+	    player.getAttackSpeed(), player.getArmor(), player.getArmorCoefficient(),
+	    player.getColor().r, player.getColor().g, player.getColor().b);
 	return 0;
 } // namespace cf
 
@@ -85,8 +85,7 @@ int Server::createGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 		if (i.getName() == name) {
 			answer.set(false);
 			handle.pushPacket(answer, TcpPrctl::Type::CREATE_GAMEROOM);
-			say(false, "[%s]: {%s} already exist\n", __FUNCTION__,
-			    name.c_str());
+			say(false, "[%s]: {%s} already exist\n", __FUNCTION__, name.c_str());
 			return 0;
 		}
 	}
@@ -115,8 +114,7 @@ int Server::deleteGameRoomHandler(PlayerConnection &handle, Serializer &)
 		resendGameRoomsHandler();
 		return 0;
 	}
-	say(false, "[%s] {%s} not found\n", __FUNCTION__,
-	    handle.room().getName().c_str());
+	say(false, "[%s] {%s} not found\n", __FUNCTION__, handle.room().getName().c_str());
 	return -1;
 }
 
@@ -148,8 +146,7 @@ int Server::joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead)
 			resendGameRoomsHandler();
 			resendPlayerListHandler();
 			sendRequiredAssets(handle);
-			say(true, "~%s joined {%s}\n", handle.name().c_str(),
-			    i.getName().c_str());
+			say(true, "~%s joined {%s}\n", handle.name().c_str(), i.getName().c_str());
 			return 0;
 		}
 	}
@@ -166,8 +163,7 @@ int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &)
 		return 0;
 	answer.set(ok);
 	if (ok == true) {
-		say(ok, "~%s left {%s}\n", handle.name().c_str(),
-		    handle.room().getName().c_str());
+		say(ok, "~%s left {%s}\n", handle.name().c_str(), handle.room().getName().c_str());
 		handle.leaveRoom();
 	}
 	handle.pushPacket(answer, TcpPrctl::Type::LEAVE_GAMEROOM);
@@ -176,8 +172,7 @@ int Server::leaveGameRoomHandler(PlayerConnection &handle, Serializer &)
 	return 0;
 }
 
-int Server::getGameRoomPlayersListHandler(PlayerConnection &handle,
-					  Serializer &toRead)
+int Server::getGameRoomPlayersListHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	Serializer answer;
 	std::string name;
@@ -191,8 +186,7 @@ int Server::getGameRoomPlayersListHandler(PlayerConnection &handle,
 	return 0;
 }
 
-int Server::sendGameRoomMessageHandler(PlayerConnection &handle,
-				       Serializer &toRead)
+int Server::sendGameRoomMessageHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	Serializer answer;
 	std::string message;
@@ -250,14 +244,14 @@ int Server::toggleReadyHandler(PlayerConnection &handle, Serializer &)
 		return 0;
 	else if (handle.isInRoom() == false) {
 		handle.ready(false);
-	} else {
+	}
+	else {
 		handle.ready(!handle.ready());
 		start = isStarting(handle.room().getPlayers());
 	}
 	answer.set(handle.ready());
 	handle.pushPacket(answer, TcpPrctl::Type::TOGGLE_READY);
-	say(true, "~%s: %s\n", handle.name().c_str(),
-	    (handle.ready() ? "ready" : "not ready"));
+	say(true, "~%s: %s\n", handle.name().c_str(), (handle.ready() ? "ready" : "not ready"));
 	resendPlayerListHandler();
 	if (start == true) {
 		startGameRoom(handle.room());
@@ -298,12 +292,13 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 	if (!toRead.get(filename))
 		return -1;
 	if (std::filesystem::is_regular_file(filename) == false) {
-		say(false, "~%s: asset \"%s\" does not exist.\n",
-		    handle.name().c_str(), filename.c_str());
+		say(false, "~%s: asset \"%s\" does not exist.\n", handle.name().c_str(),
+		    filename.c_str());
 		return 0;
-	} else if (isValidPath(filename) == false) {
-		say(false, "~%s: asset \"%s\" is not a valid path.\n",
-		    handle.name().c_str(), filename.c_str());
+	}
+	else if (isValidPath(filename) == false) {
+		say(false, "~%s: asset \"%s\" is not a valid path.\n", handle.name().c_str(),
+		    filename.c_str());
 		return 0;
 	}
 	auto &l = _assetsHandlers.emplace_back(*this, filename);
@@ -312,20 +307,21 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &toRead)
 	answer.set(l.filename);
 	answer.set(l.chksum);
 	handle.pushPacket(answer, TcpPrctl::Type::ASSETS_SEND);
-	say(true, "~%s: asset \"%s\" on port %u.\n", handle.name().c_str(),
-	    l.filename.c_str(), l.port);
+	say(true, "~%s: asset \"%s\" on port %u.\n", handle.name().c_str(), l.filename.c_str(),
+	    l.port);
 	l.acceptor.async_accept(l.receiver,
-				boost::bind(&Server::assetListenerCallback,
-					    this, std::ref(l),
+				boost::bind(&Server::assetListenerCallback, this, std::ref(l),
 					    boost::asio::placeholders::error));
 	return 0;
 }
 
 int Server::gameStartHandler(PlayerConnection &handle, Serializer &toRead)
 {
-	(void)toRead;
-	say(false, "~%s: error: this packet is only sent by the server.\n",
-	    handle.name().c_str());
+	uint16_t port;
+
+	if (!toRead.get(port))
+		return -1;
+	handle.getUdpRemote().port(port);
 	return 0;
 }
 
@@ -338,13 +334,11 @@ int Server::ackHandler(PlayerConnection &handle, Serializer &)
 	return 0;
 }
 
-int Server::packetHandler(PlayerConnection &handle,
-			  const TcpPrctl &packetHeader,
+int Server::packetHandler(PlayerConnection &handle, const TcpPrctl &packetHeader,
 			  Serializer &payload) noexcept
 {
 	packetHeader.display();
-	if (packetHeader.isCorrect()
-	    && _callbacks[packetHeader.getType()](handle, payload) >= 0) {
+	if (packetHeader.isCorrect() && _callbacks[packetHeader.getType()](handle, payload) >= 0) {
 		refreshTcpConnections();
 		return 0;
 	}

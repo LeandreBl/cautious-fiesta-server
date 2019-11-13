@@ -64,6 +64,7 @@
 		"typeinfo": "cpp",
 		"valarray": "cpp",
 		"filesystem": "cpp",
-		"bit": "cpp"
+		"bit": "cpp",
+		"*.ipp": "cpp"
 	}
 }

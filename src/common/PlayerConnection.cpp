@@ -1,36 +1,48 @@
 #include <iostream>
 
+#include <boost/bind.hpp>
+
 #include "PlayerConnection.hpp"
 #include "GameRoom.hpp"
 #include "Server.hpp"
 
-namespace cf
-{
-PlayerConnection::PlayerConnection(std::unique_ptr<tcp::socket> &socket,
-				   Server &server) noexcept
-    : _service(), _header(), _rd(0), _buffer(), _toRead(0), _payload(),
-      _name(""), _udpSocket(), _udpIndex(0), _udpRemote(),
-      _tcpSocket(std::move(socket)), _room(nullptr), _toWrite(),
-      _server(server), _player(), _ready(false)
+namespace cf {
+PlayerConnection::PlayerConnection(std::unique_ptr<tcp::socket> &socket, Server &server) noexcept
+	: _service()
+	, _header()
+	, _rd(0)
+	, _netBuffer()
+	, _toRead(0)
+	, _name("")
+	, _udpRemote(udp::endpoint(socket->remote_endpoint().address(),
+				   socket->remote_endpoint().port()))
+	, _tcpSocket(std::move(socket))
+	, _room(nullptr)
+	, _toWrite()
+	, _toWriteUdp()
+	, _udpIndex(0)
+	, _server(server)
+	, _player()
+	, _ready(false)
 {
 	headerMode();
 }
 
 void PlayerConnection::headerMode() noexcept
 {
-	_tcpSocket->async_read_some(
-		boost::asio::buffer(&_header + _rd, sizeof(_header) - _rd),
-		std::bind(&PlayerConnection::asyncReadHeader, this,
-			  std::placeholders::_1, std::placeholders::_2));
+	_tcpSocket->async_read_some(boost::asio::buffer(&_header + _rd, sizeof(_header) - _rd),
+				    boost::bind(&PlayerConnection::asyncReadHeader, this,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred));
 }
 
 void PlayerConnection::packetMode() noexcept
 {
-	size_t n = (_toRead > _buffer.size()) ? _buffer.size() : _toRead;
-	_tcpSocket->async_read_some(
-		boost::asio::buffer(_buffer, n),
-		std::bind(&PlayerConnection::asyncReadPayload, this,
-			  std::placeholders::_1, std::placeholders::_2));
+	size_t n = (_toRead > _netBuffer.buffer.size()) ? _netBuffer.buffer.size() : _toRead;
+	_tcpSocket->async_read_some(boost::asio::buffer(_netBuffer.buffer, n),
+				    boost::bind(&PlayerConnection::asyncReadPayload, this,
+						boost::asio::placeholders::error,
+						boost::asio::placeholders::bytes_transferred));
 }
 
 void PlayerConnection::asyncReadPayload(const boost::system::error_code &error,
@@ -39,17 +51,16 @@ void PlayerConnection::asyncReadPayload(const boost::system::error_code &error,
 	if (error == boost::asio::error::eof) {
 		_server.kick(*this);
 		return;
-	} else if (error) {
-		std::cerr << "~" << _name
-			  << " Async read error: " << error.message()
-			  << std::endl;
+	}
+	else if (error) {
+		std::cerr << "~" << _name << " Async read error: " << error.message() << std::endl;
 		_server.kick(*this);
 		return;
 	}
 	_toRead -= bytes_transferred;
-	_payload.nativeSet(_buffer.data(), bytes_transferred);
+	_netBuffer.serializer.nativeSet(_netBuffer.buffer.data(), bytes_transferred);
 	if (_toRead == 0) {
-		_server.packetHandler(*this, _header, _payload);
+		_server.packetHandler(*this, _header, _netBuffer.serializer);
 		headerMode();
 		return;
 	}
@@ -62,10 +73,9 @@ void PlayerConnection::asyncReadHeader(const boost::system::error_code &error,
 	if (error == boost::asio::error::eof) {
 		_server.kick(*this);
 		return;
-	} else if (error) {
-		std::cerr << "~" << _name
-			  << " Async read error: " << error.message()
-			  << std::endl;
+	}
+	else if (error) {
+		std::cerr << "~" << _name << " Async read error: " << error.message() << std::endl;
 		_server.kick(*this);
 		return;
 	}
@@ -98,9 +108,7 @@ int PlayerConnection::writeTcp(const Serializer &serializer) noexcept
 {
 	boost::system::error_code err;
 	size_t n = _tcpSocket->write_some(
-		boost::asio::buffer(serializer.getNativeHandle(),
-				    serializer.getSize()),
-		err);
+		boost::asio::buffer(serializer.getNativeHandle(), serializer.getSize()), err);
 	if (err)
 		return -1;
 	if (n != serializer.getSize()) {
@@ -135,7 +143,8 @@ void PlayerConnection::close() noexcept
 	try {
 		_tcpSocket->shutdown(tcp::socket::shutdown_receive);
 		_tcpSocket->close();
-	} catch (const boost::system::system_error &error) {
+	}
+	catch (const boost::system::system_error &error) {
 	}
 	_name.clear();
 }
@@ -155,8 +164,7 @@ void PlayerConnection::ready(bool state) noexcept
 	_ready = state;
 }
 
-void PlayerConnection::pushPacket(Serializer &packet,
-				  TcpPrctl::Type type) noexcept
+void PlayerConnection::pushPacket(Serializer &packet, TcpPrctl::Type type) noexcept
 {
 	TcpPrctl header(type, packet.getSize());
 	header.display(false);
@@ -196,41 +204,44 @@ Player &PlayerConnection::getPlayer() noexcept
 	return _player;
 }
 
-void PlayerConnection::setUdpPort(uint16_t port) noexcept
+udp::endpoint &PlayerConnection::getUdpRemote() noexcept
 {
-	_udpSocket = std::make_unique<udp::socket>(_service);
-	_udpSocket->open(udp::v4());
-	_udpRemote =
-		udp::endpoint(_tcpSocket->local_endpoint().address(), port);
+	return _udpRemote;
 }
 
-void PlayerConnection::pushUdp(Serializer &packet,
-			       UdpPrctl::Type type) noexcept
+Serializer &PlayerConnection::getUdpSerializer() noexcept
+{
+	return _udpSerializer;
+}
+
+void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept
 {
 	_toWriteUdp.emplace(packet, type, _udpIndex++);
 }
 
-void PlayerConnection::refreshUdp() noexcept
+void PlayerConnection::refreshUdp(udp::socket &socket) noexcept
 {
-	while (_toWriteUdp.size()) {
-		auto &pkt = _toWriteUdp.front();
-		if (writeUdp(pkt) != 0)
-			return;
+	while (_toWriteUdp.empty() == false) {
+		auto &p = _toWriteUdp.front();
+		size_t total = p.getSize();
+		size_t n = 0;
+		while (n < total) {
+			n += socket.send_to(boost::asio::buffer((uint8_t *)p.getNativeHandle() + n,
+								p.getSize() - n),
+					    _udpRemote);
+		}
 		_toWriteUdp.pop();
 	}
 }
 
-int PlayerConnection::writeUdp(const Serializer &serializer) noexcept
+void PlayerConnection::setUdpHeader(const UdpPrctl::udpHeader &header) noexcept
 {
-	boost::system::error_code err;
-	_udpSocket->send_to(boost::asio::buffer(serializer.getNativeHandle(),
-						serializer.getSize()),
-			    _udpRemote, MSG_CONFIRM, err);
-	if (err) {
-		std::cerr << err.message() << std::endl;
-		return -1;
-	}
-	return 0;
+	_udpHeader = UdpPrctl(header);
+}
+
+UdpPrctl &PlayerConnection::getUdpHeader() noexcept
+{
+	return _udpHeader;
 }
 
 } // namespace cf
