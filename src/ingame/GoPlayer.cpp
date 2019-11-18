@@ -26,7 +26,7 @@ void GoPlayer::setStaticSpeed() noexcept
 
 void GoPlayer::setFreeSpeed() noexcept
 {
-	_velocity.setAcceleration(sf::Vector2f(0.8, 0.8));
+	_velocity.setAcceleration(sf::Vector2f(0.1, 0.1));
 }
 
 } // namespace cf

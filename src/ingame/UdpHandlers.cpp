@@ -61,7 +61,7 @@ static const sf::Vector2f MOVE_MATRIX[] = {
 	{0, -10},
 	{-10, 0},
 	{0, 10},
-	{0, 10},
+	{10, 0},
 };
 
 int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
@@ -71,14 +71,17 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 
 	if (!toRead.get(action) || !toRead.get(type))
 		return -1;
-	if (action >= static_cast<int32_t>(UdpPrctl::inputType::UP)
-	    && action <= static_cast<int32_t>(UdpPrctl::inputType::RIGHT)) {
+	if (type >= static_cast<int32_t>(UdpPrctl::inputType::UP)
+	    && type <= static_cast<int32_t>(UdpPrctl::inputType::RIGHT)) {
 		if (static_cast<UdpPrctl::inputAction>(action) == UdpPrctl::inputAction::PRESSED) {
-			player.getVelocity().addSpeed(MOVE_MATRIX[type]);
+			player.getVelocity().addSpeed(
+				MOVE_MATRIX[type - static_cast<int>(UdpPrctl::inputType::UP)]);
 			player.setStaticSpeed();
 		}
-		else
+		else if (static_cast<UdpPrctl::inputAction>(action)
+			 == UdpPrctl::inputAction::RELEASED) {
 			player.setFreeSpeed();
+		}
 	}
 	return 0;
 }

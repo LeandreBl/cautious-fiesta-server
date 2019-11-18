@@ -1,5 +1,7 @@
 #pragma once
 
+#include <queue>
+
 #include <boost/asio.hpp>
 #include <GameObject.hpp>
 
@@ -21,8 +23,7 @@ class GoUdp : public sfs::GameObject {
 	GoPlayer *getPlayerFromConnection(PlayerConnection &connection) const noexcept;
 	PlayerConnection *getClient(const udp::endpoint &remote) const noexcept;
 	void onUpdate(const boost::system::error_code &error, std::size_t bytes_transferred);
-	void computePackets(PlayerConnection &connection) noexcept;
-	bool executePacket(PlayerConnection &connection) noexcept;
+	void executePackets() noexcept;
 	void asyncReceive() noexcept;
 	template <typename... Args> void autoBind(UdpPrctl::Type type, Args... args)
 	{
@@ -46,5 +47,6 @@ class GoUdp : public sfs::GameObject {
 	std::array<uint8_t, 1 << 12> _commonBuffer;
 	udp::socket _commonSocket;
 	GameManager &_manager;
+	std::queue<std::pair<UdpPrctl, PlayerConnection *>> _toProcess;
 };
 } // namespace cf

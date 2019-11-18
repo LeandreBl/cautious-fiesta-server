@@ -54,8 +54,6 @@ class PlayerConnection {
 	Serializer &getUdpSerializer() noexcept;
 	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
 	void refreshUdp(udp::socket &socket) noexcept;
-	UdpPrctl &getUdpHeader() noexcept;
-	void setUdpHeader(const UdpPrctl::udpHeader &header) noexcept;
 	void notifyUdpReceive(uint16_t pktIndex) noexcept;
 
       protected:
@@ -67,7 +65,6 @@ class PlayerConnection {
 	void packetMode() noexcept;
 	boost::asio::io_service _service;
 	TcpPrctl _header;
-	UdpPrctl _udpHeader;
 	size_t _rd;
 	struct netBuffer _netBuffer;
 	size_t _toRead;

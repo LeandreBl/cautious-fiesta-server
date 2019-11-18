@@ -239,15 +239,4 @@ void PlayerConnection::notifyUdpReceive(uint16_t pktIndex) noexcept
 		}
 	}
 }
-
-void PlayerConnection::setUdpHeader(const UdpPrctl::udpHeader &header) noexcept
-{
-	_udpHeader = UdpPrctl(header);
-}
-
-UdpPrctl &PlayerConnection::getUdpHeader() noexcept
-{
-	return _udpHeader;
-}
-
 } // namespace cf

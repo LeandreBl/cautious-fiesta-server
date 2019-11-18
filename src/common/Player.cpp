@@ -87,7 +87,7 @@ std::string Player::asString() const noexcept
 
 	os << "\"" << _name << "\": { life: " << _stats.life << ", speed: " << _stats.speed
 	   << ", attack: " << _stats.attack << ", attackSpeed: " << _stats.attackSpeed
-	   << ", armor: " << _stats.armor << " (" << getArmorCoefficient() << "%) }";
+	   << ", armor: " << _stats.armor << " (x" << getArmorCoefficient() << "%) }";
 	return os.str();
 }
 } // namespace cf
