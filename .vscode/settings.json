@@ -65,6 +65,7 @@
 		"valarray": "cpp",
 		"filesystem": "cpp",
 		"bit": "cpp",
-		"*.ipp": "cpp"
+		"*.ipp": "cpp",
+		"shared_mutex": "cpp"
 	}
 }

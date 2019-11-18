@@ -1,9 +1,10 @@
 #include <math.h>
 
+#include <sstream>
+
 #include "Player.hpp"
 
-namespace cf
-{
+namespace cf {
 
 struct Player::stats &operator+=(struct Player::stats &dest,
 				 const struct Player::stats &src) noexcept
@@ -17,7 +18,9 @@ struct Player::stats &operator+=(struct Player::stats &dest,
 }
 
 Player::Player(const std::string &name, const struct stats &stats, const sf::Color &color) noexcept
-    : _name(name), _stats(stats), _color(color)
+	: _name(name)
+	, _stats(stats)
+	, _color(color)
 {
 }
 
@@ -63,7 +66,7 @@ float Player::getSpeed() const noexcept
 	return _stats.speed;
 }
 
-sf::Color Player::getColor() const noexcept
+const sf::Color &Player::getColor() const noexcept
 {
 	return _color;
 }
@@ -78,15 +81,13 @@ void Player::levelUp(const struct stats &toAdd) noexcept
 	_stats += toAdd;
 }
 
-std::ostream &operator<<(std::ostream &os, const Player &player) noexcept
+std::string Player::asString() const noexcept
 {
-	os << "\"" << player.getName() << "\": { life: " << player.getLife()
-	   << ", speed: " << player.getSpeed()
-	   << ", attack: " << player.getAttack()
-	   << ", attackSpeed: " << player.getAttackSpeed()
-	   << ", armor: " << player.getArmor() << " ("
-	   << player.getArmorCoefficient() << "%) }";
-	return os;
-}
+	std::ostringstream os;
 
+	os << "\"" << _name << "\": { life: " << _stats.life << ", speed: " << _stats.speed
+	   << ", attack: " << _stats.attack << ", attackSpeed: " << _stats.attackSpeed
+	   << ", armor: " << _stats.armor << " (" << getArmorCoefficient() << "%) }";
+	return os.str();
+}
 } // namespace cf
