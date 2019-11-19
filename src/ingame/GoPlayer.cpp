@@ -1,14 +1,27 @@
 #include "GoPlayer.hpp"
+#include "GameManager.hpp"
 
 namespace cf {
 
-GoPlayer::GoPlayer(const std::string &playerName, const Player &player) noexcept
+GoPlayer::~GoPlayer() noexcept
+{
+	_gameManager.getColliderManager().removeFromAllies(*this);
+}
+
+GoPlayer::GoPlayer(GameManager &manager, const std::string &playerName,
+		   const Player &player) noexcept
 	: Player(player)
+	, _gameManager(manager)
 	, _weapon(nullptr) /* TODO start with a weapon */
 	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0.5, 0.5)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
 {
 	name(playerName);
+}
+
+void GoPlayer::start(sfs::Scene &) noexcept
+{
+	_gameManager.getColliderManager().addToAllies(*this);
 }
 
 void GoPlayer::update(sfs::Scene &) noexcept

@@ -12,10 +12,14 @@
 namespace cf {
 
 using boost::asio::ip::udp;
+class GameManager;
 
 class GoPlayer : public IGoEntity, public Player {
       public:
-	GoPlayer(const std::string &playerName, const Player &player) noexcept;
+	~GoPlayer();
+	GoPlayer(GameManager &manager, const std::string &playerName,
+		 const Player &player) noexcept;
+	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 	std::string asString() const noexcept;
 	sfs::Velocity &getVelocity() noexcept;
@@ -27,6 +31,7 @@ class GoPlayer : public IGoEntity, public Player {
 	IGoWeapon *getWeapon() noexcept;
 
       private:
+	GameManager &_gameManager;
 	IGoWeapon *_weapon;
 	sfs::Velocity &_velocity;
 	CpnPrevPosition &_prevPosition;

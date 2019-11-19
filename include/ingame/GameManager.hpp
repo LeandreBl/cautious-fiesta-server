@@ -5,7 +5,7 @@
 
 #include "GameRoom.hpp"
 #include "GoPlayer.hpp"
-
+#include "ColliderManager.hpp"
 
 namespace cf {
 template <typename T> T &operator<<(T &os, const sf::Vector2f &v)
@@ -30,6 +30,7 @@ class GameManager : public sfs::GameObject {
       public:
 	GameManager(GameRoom &room, uint16_t port) noexcept;
 	void start(sfs::Scene &scene) noexcept;
+	ColliderManager &getColliderManager() noexcept;
 	std::vector<GoPlayer *> &getGoPlayers() noexcept;
 	const std::vector<PlayerConnection *> &getConnections() noexcept;
 
@@ -38,5 +39,6 @@ class GameManager : public sfs::GameObject {
 	boost::asio::io_service _udpService;
 	std::vector<GoPlayer *> _players;
 	GameRoom &_gameRoom;
+	ColliderManager *_colliderManager;
 };
 } // namespace cf
