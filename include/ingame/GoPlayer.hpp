@@ -1,24 +1,23 @@
 #pragma once
 
 #include <Scene.hpp>
-#include <Velocity.hpp>
 #include <boost/asio.hpp>
 
 #include "IGoWeapon.hpp"
 #include "IGoEntity.hpp"
 #include "CpnPrevPosition.hpp"
-#include "Player.hpp"
+#include "Stats.hpp"
 
 namespace cf {
 
 using boost::asio::ip::udp;
 class GameManager;
 
-class GoPlayer : public IGoEntity, public Player {
+class GoPlayer : public IGoEntity {
       public:
 	~GoPlayer();
-	GoPlayer(GameManager &manager, const std::string &playerName,
-		 const Player &player) noexcept;
+	GoPlayer(const sf::Vector2f &position, GameManager &manager, const std::string &playerName,
+		 const Stats &player) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 	std::string asString() const noexcept;
@@ -29,6 +28,7 @@ class GoPlayer : public IGoEntity, public Player {
 	void goToPrevPosition() noexcept;
 	sf::FloatRect getHitBox() const noexcept;
 	IGoWeapon *getWeapon() noexcept;
+	Serializer serialize() const noexcept;
 
       private:
 	GameManager &_gameManager;

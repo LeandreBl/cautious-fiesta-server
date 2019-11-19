@@ -57,13 +57,6 @@ int GoUdp::spawnHandler(GoPlayer &player, Serializer &toRead)
 	return 0;
 }
 
-static const sf::Vector2f MOVE_MATRIX[] = {
-	{0, -10},
-	{-10, 0},
-	{0, 10},
-	{10, 0},
-};
-
 int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 {
 	int32_t action;
@@ -88,11 +81,19 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 			}
 			break;
 		case UdpPrctl::inputType::UP:
+			player.getVelocity().addSpeed(sf::Vector2f(0, -player.getSpeed()));
+			player.setStaticSpeed();
+			break;
 		case UdpPrctl::inputType::LEFT:
+			player.getVelocity().addSpeed(sf::Vector2f(-player.getSpeed(), 0));
+			player.setStaticSpeed();
+			break;
 		case UdpPrctl::inputType::DOWN:
+			player.getVelocity().addSpeed(sf::Vector2f(0, player.getSpeed()));
+			player.setStaticSpeed();
+			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.getVelocity().addSpeed(
-				MOVE_MATRIX[type - static_cast<int>(UdpPrctl::inputType::UP)]);
+			player.getVelocity().addSpeed(sf::Vector2f(player.getSpeed(), 0));
 			player.setStaticSpeed();
 			break;
 		}

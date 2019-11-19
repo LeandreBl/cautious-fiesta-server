@@ -9,7 +9,7 @@
 #include <Tcp.hpp>
 #include <Udp.hpp>
 
-#include "Player.hpp"
+#include "Stats.hpp"
 
 namespace cf {
 /* forward declaration */
@@ -47,8 +47,8 @@ class PlayerConnection {
 	void setUdpPort(uint16_t port) noexcept;
 	void pushUdp(Serializer &packet, UdpPrctl::Type type) noexcept;
 	void refreshUdp() noexcept;
-	void setPlayer(const Player::stats &stats, const sf::Color &color) noexcept;
-	Player &getPlayer() noexcept;
+	void setPlayer(const Stats::stats &stats, const sf::Color &color) noexcept;
+	Stats &getPlayer() noexcept;
 
 	udp::endpoint &getUdpRemote() noexcept;
 	Serializer &getUdpSerializer() noexcept;
@@ -77,7 +77,7 @@ class PlayerConnection {
 	uint16_t _udpIndex;
 	Serializer _udpSerializer;
 	Server &_server;
-	Player _player;
+	Stats _player;
 	bool _ready;
 	bool _assetReady;
 };

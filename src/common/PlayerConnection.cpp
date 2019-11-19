@@ -194,12 +194,12 @@ std::string PlayerConnection::getIp() const noexcept
 	return _tcpSocket->local_endpoint().address().to_string();
 }
 
-void PlayerConnection::setPlayer(const Player::stats &stats, const sf::Color &color) noexcept
+void PlayerConnection::setPlayer(const Stats::stats &stats, const sf::Color &color) noexcept
 {
-	_player = Player(_name, stats, color);
+	_player = Stats(_name, stats, color);
 }
 
-Player &PlayerConnection::getPlayer() noexcept
+Stats &PlayerConnection::getPlayer() noexcept
 {
 	return _player;
 }
@@ -217,6 +217,8 @@ Serializer &PlayerConnection::getUdpSerializer() noexcept
 void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept
 {
 	_toWriteUdp.emplace_back(UdpPrctl(type, packet.getSize(), _udpIndex++), packet);
+	if (_udpIndex >= UINT16_MAX - 10)
+		_udpIndex = 0;
 }
 
 void PlayerConnection::refreshUdp(udp::socket &socket) noexcept

@@ -52,7 +52,7 @@ void ColliderManager::addToEnnemies(IGoEntity &entity) noexcept
 	_ennemyEntities.push_back(&entity);
 }
 
-void ColliderManager::update(sfs::Scene &scene) noexcept
+void ColliderManager::update(sfs::Scene &) noexcept
 {
 	for (auto &&e : _allyEntities) {
 		for (auto &&o : _ennemyObstacles)

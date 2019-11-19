@@ -8,15 +8,15 @@ GoPlayer::~GoPlayer() noexcept
 	_gameManager.getColliderManager().removeFromAllies(*this);
 }
 
-GoPlayer::GoPlayer(GameManager &manager, const std::string &playerName,
-		   const Player &player) noexcept
-	: Player(player)
+GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
+		   const std::string &playerName, const Stats &player) noexcept
+	: IGoEntity(position, playerName, player)
 	, _gameManager(manager)
 	, _weapon(nullptr) /* TODO start with a weapon */
 	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0.5, 0.5)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
 {
-	name(playerName);
+	manager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
 }
 
 void GoPlayer::start(sfs::Scene &) noexcept
@@ -28,11 +28,12 @@ void GoPlayer::update(sfs::Scene &) noexcept
 {
 	if (getPosition() != _prevPosition.getPrevPosition())
 		std::cout << asString() << std::endl;
+	
 }
 
 std::string GoPlayer::asString() const noexcept
 {
-	return GameObject::asString() + " " + Player::asString();
+	return GameObject::asString() + " " + Stats::asString();
 }
 
 sfs::Velocity &GoPlayer::getVelocity() noexcept
@@ -69,6 +70,22 @@ sf::FloatRect GoPlayer::getHitBox() const noexcept
 IGoWeapon *GoPlayer::getWeapon() noexcept
 {
 	return _weapon;
+}
+
+Serializer GoPlayer::serialize() const noexcept
+{
+	Serializer s;
+
+	s.set(static_cast<int32_t>(UdpPrctl::objType::PLAYER));
+	s.set(getName());
+	s.set(getLife());
+	s.set(getSpeed());
+	s.set(getAttack());
+	s.set(getAttackSpeed());
+	s.set(getArmor());
+	s.set(getColor());
+	s.set(static_cast<int32_t>(UdpPrctl::weaponType::NONE));
+	return s;
 }
 
 } // namespace cf

@@ -7,7 +7,7 @@ namespace cf {
 int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 {
 	std::string nickname;
-	Player::stats stats;
+	Stats::stats stats;
 	sf::Color color;
 	Serializer answer;
 	uint8_t isOk = true;

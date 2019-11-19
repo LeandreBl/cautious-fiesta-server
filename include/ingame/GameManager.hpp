@@ -33,6 +33,7 @@ class GameManager : public sfs::GameObject {
 	ColliderManager &getColliderManager() noexcept;
 	std::vector<GoPlayer *> &getGoPlayers() noexcept;
 	const std::vector<PlayerConnection *> &getConnections() noexcept;
+	void updateUdp(const Serializer &s, UdpPrctl::Type type) noexcept;
 
       private:
 	uint16_t _udpPort;
