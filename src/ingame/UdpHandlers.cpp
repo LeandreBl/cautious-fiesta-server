@@ -71,16 +71,40 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 
 	if (!toRead.get(action) || !toRead.get(type))
 		return -1;
-	if (type >= static_cast<int32_t>(UdpPrctl::inputType::UP)
-	    && type <= static_cast<int32_t>(UdpPrctl::inputType::RIGHT)) {
-		if (static_cast<UdpPrctl::inputAction>(action) == UdpPrctl::inputAction::PRESSED) {
+	IGoWeapon *weapon;
+	switch (static_cast<UdpPrctl::inputAction>(action)) {
+	case UdpPrctl::inputAction::PRESSED:
+		switch (static_cast<UdpPrctl::inputType>(type)) {
+		case UdpPrctl::inputType::ATTACK1:
+			weapon = player.getWeapon();
+			if (weapon != nullptr) {
+				weapon->attack(player);
+			}
+			break;
+		case UdpPrctl::inputType::ATTACK2:
+			weapon = player.getWeapon();
+			if (weapon != nullptr) {
+				weapon->specialAttack(player);
+			}
+			break;
+		case UdpPrctl::inputType::UP:
+		case UdpPrctl::inputType::LEFT:
+		case UdpPrctl::inputType::DOWN:
+		case UdpPrctl::inputType::RIGHT:
 			player.getVelocity().addSpeed(
 				MOVE_MATRIX[type - static_cast<int>(UdpPrctl::inputType::UP)]);
 			player.setStaticSpeed();
+			break;
 		}
-		else if (static_cast<UdpPrctl::inputAction>(action)
-			 == UdpPrctl::inputAction::RELEASED) {
+		break;
+	case UdpPrctl::inputAction::RELEASED:
+		switch (static_cast<UdpPrctl::inputType>(type)) {
+		case UdpPrctl::inputType::UP:
+		case UdpPrctl::inputType::LEFT:
+		case UdpPrctl::inputType::DOWN:
+		case UdpPrctl::inputType::RIGHT:
 			player.setFreeSpeed();
+			break;
 		}
 	}
 	return 0;
