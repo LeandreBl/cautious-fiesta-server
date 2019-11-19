@@ -37,6 +37,16 @@ void GoPlayer::setFreeSpeed() noexcept
 	_velocity.setAcceleration(sf::Vector2f(0.1, 0.1));
 }
 
+void GoPlayer::collide(IGoEntity &entity) noexcept
+{
+	/* TODO */
+}
+
+void GoPlayer::goToPrevPosition() noexcept
+{
+	setPosition(_prevPosition.getPrevPosition());
+}
+
 sf::FloatRect GoPlayer::getHitBox() const noexcept
 {
 	/* TODO with sprite size */

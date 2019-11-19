@@ -21,6 +21,8 @@ class GoPlayer : public IGoEntity, public Player {
 	sfs::Velocity &getVelocity() noexcept;
 	void setStaticSpeed() noexcept;
 	void setFreeSpeed() noexcept;
+	void collide(IGoEntity &entity) noexcept;
+	void goToPrevPosition() noexcept;
 	sf::FloatRect getHitBox() const noexcept;
 	IGoWeapon *getWeapon() noexcept;
 
