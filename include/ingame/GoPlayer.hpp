@@ -35,5 +35,7 @@ class GoPlayer : public IGoEntity {
 	IGoWeapon *_weapon;
 	sfs::Velocity &_velocity;
 	CpnPrevPosition &_prevPosition;
+	sfs::Sprite &_hat;
+	std::string _spriteName;
 };
 } // namespace cf

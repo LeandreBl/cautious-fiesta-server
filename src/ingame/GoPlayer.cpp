@@ -5,6 +5,10 @@ namespace cf {
 
 GoPlayer::~GoPlayer() noexcept
 {
+	Serializer s;
+
+	s.set(getId());
+	_gameManager.updateUdp(s, UdpPrctl::Type::DESTROY);
 	_gameManager.getColliderManager().removeFromAllies(*this);
 }
 
@@ -15,20 +19,37 @@ GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
 	, _weapon(nullptr) /* TODO start with a weapon */
 	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0.5, 0.5)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
+	, _hat(addComponent<sfs::Sprite>())
+	, _spriteName("assets/HAT_61x61.png")
 {
 	manager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
 }
 
-void GoPlayer::start(sfs::Scene &) noexcept
+void GoPlayer::start(sfs::Scene &scene) noexcept
 {
+	auto *texture = scene.getAssetTexture(_spriteName);
+	if (texture == nullptr) {
+		std::cerr << "Unable to find " << _spriteName << " asset" << std::endl;
+	}
+	else {
+		_hat.setTexture(*texture, true);
+	}
 	_gameManager.getColliderManager().addToAllies(*this);
 }
 
 void GoPlayer::update(sfs::Scene &) noexcept
 {
-	if (getPosition() != _prevPosition.getPrevPosition())
-		std::cout << asString() << std::endl;
-	
+	if (getPosition() != _prevPosition.getPrevPosition()) {
+		Serializer s;
+		s.set(getId());
+		s.set(getPosition());
+		_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
+		s.clear();
+		s.set(getId());
+		s.set(_velocity.getSpeed());
+		s.set(_velocity.getAcceleration());
+		_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
+	}
 }
 
 std::string GoPlayer::asString() const noexcept
@@ -77,6 +98,7 @@ Serializer GoPlayer::serialize() const noexcept
 	Serializer s;
 
 	s.set(static_cast<int32_t>(UdpPrctl::objType::PLAYER));
+	s.set(getId());
 	s.set(getName());
 	s.set(getLife());
 	s.set(getSpeed());
@@ -84,6 +106,7 @@ Serializer GoPlayer::serialize() const noexcept
 	s.set(getAttackSpeed());
 	s.set(getArmor());
 	s.set(getColor());
+	s.set(_spriteName);
 	s.set(static_cast<int32_t>(UdpPrctl::weaponType::NONE));
 	return s;
 }
