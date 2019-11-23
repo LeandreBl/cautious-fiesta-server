@@ -62,18 +62,13 @@ void GameRoom::leave(PlayerConnection &handle) noexcept
 	}
 }
 
-void GameRoom::start(const std::function<void(GameRoom &)> &endCallback, uint16_t port) noexcept
+void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcept
 {
 	Serializer packet;
 
 	_isRunning = true;
-	packet.set(port);
-	for (auto &&i : _players) {
-		i->pushPacket(packet, TcpPrctl::Type::GAME_STARTED);
-		i->refreshTcp();
-	}
 	_endCallback = std::move(endCallback);
-	_thread = std::make_unique<std::thread>(std::bind(&GameRoom::scene, this, port));
+	_thread = std::make_unique<std::thread>(std::bind(&GameRoom::scene, this));
 	_thread->detach();
 	trace(_thread != nullptr, "#%s started with %zu player(s).\n", _name.c_str(),
 	      _players.size());

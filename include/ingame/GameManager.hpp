@@ -28,7 +28,7 @@ template <typename T, typename B> T &operator<<(T &os, const sf::Rect<B> &rect) 
 }
 class GameManager : public sfs::GameObject {
       public:
-	GameManager(GameRoom &room, uint16_t port) noexcept;
+	GameManager(GameRoom &room) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	ColliderManager &getColliderManager() noexcept;
 	std::vector<GoPlayer *> &getGoPlayers() noexcept;
@@ -36,8 +36,6 @@ class GameManager : public sfs::GameObject {
 	void updateUdp(const Serializer &s, UdpPrctl::Type type) noexcept;
 
       private:
-	uint16_t _udpPort;
-	boost::asio::io_service _udpService;
 	std::vector<GoPlayer *> _players;
 	GameRoom &_gameRoom;
 	ColliderManager *_colliderManager;

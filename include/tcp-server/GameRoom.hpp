@@ -5,10 +5,8 @@
 
 #include "PlayerConnection.hpp"
 
-namespace cf
-{
-class GameRoom
-{
+namespace cf {
+class GameRoom {
       public:
 	GameRoom(const std::string &name) noexcept;
 	~GameRoom() noexcept;
@@ -17,12 +15,11 @@ class GameRoom
 	const std::vector<PlayerConnection *> &getPlayers() const noexcept;
 	void join(PlayerConnection &handle) noexcept;
 	void leave(PlayerConnection &handle) noexcept;
-	void start(const std::function<void(GameRoom &)> &endCallback,
-		   uint16_t port) noexcept;
+	void start(const std::function<void(GameRoom &)> &endCallback) noexcept;
 	bool isRunning() const noexcept;
 
       protected:
-	void scene(uint16_t port) noexcept;
+	void scene() noexcept;
 	std::string _name;
 	std::vector<PlayerConnection *> _players;
 	std::unique_ptr<std::thread> _thread;

@@ -77,14 +77,11 @@ int Server::deleteGameRoom(const std::string &name) noexcept
 
 void Server::startGameRoom(const GameRoom &room) noexcept
 {
-	uint16_t port = udp::socket(_service, udp::endpoint(udp::v4(), 0)).local_endpoint().port();
-
 	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it) {
 		if (it->getName() == room.getName()) {
 			_runningGameRooms.splice(_runningGameRooms.end(), _gameRooms, it);
 			_runningGameRooms.back().start(std::bind(&Server::gameRoomTermination, this,
-								 std::placeholders::_1),
-						       port);
+								 std::placeholders::_1));
 			return;
 		}
 	}

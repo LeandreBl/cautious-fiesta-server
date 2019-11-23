@@ -2,11 +2,11 @@
 #include "GameManager.hpp"
 
 namespace cf {
-void GameRoom::scene(uint16_t port) noexcept
+void GameRoom::scene() noexcept
 {
 	sfs::Scene scene(_name, 60);
 
-	scene.addGameObject<GameManager>(*this, port);
+	scene.addGameObject<GameManager>(*this);
 	scene.run();
 	_endCallback(*this);
 }

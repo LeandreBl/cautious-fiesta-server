@@ -2,10 +2,8 @@
 #include "GameManager.hpp"
 
 namespace cf {
-GameManager::GameManager(GameRoom &room, uint16_t port) noexcept
-	: _udpPort(port)
-	, _udpService()
-	, _players()
+GameManager::GameManager(GameRoom &room) noexcept
+	: _players()
 	, _gameRoom(room)
 	, _colliderManager(nullptr)
 {
@@ -18,7 +16,7 @@ void GameManager::start(sfs::Scene &scene) noexcept
 							i->getPlayer());
 		_players.push_back(&p);
 	}
-	scene.addGameObject<GoUdp>(*this, _udpPort);
+	scene.addGameObject<GoUdp>(*this);
 	_colliderManager = &scene.addGameObject<ColliderManager>();
 }
 

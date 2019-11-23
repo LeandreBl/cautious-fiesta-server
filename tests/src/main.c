@@ -114,10 +114,13 @@ void login_sender(lclient_t *client, const char *argument, packet_t *header)
 		.attack_speed = 10,
 		.armor = 10,
 	};
-	header->len = 8 + strlen(argument) + sizeof(stats);
+	uint8_t color = 180;
+	header->len = 8 + strlen(argument) + sizeof(stats) + 4;
 	send_header(client, header);
 	send_str(client, argument);
 	write(client->socket.fd, &stats, sizeof(stats));
+	for (int i = 0; i < 4; ++i)
+		write(client->socket.fd, &color, sizeof(color));
 }
 
 void login_receiver(lclient_t *client)

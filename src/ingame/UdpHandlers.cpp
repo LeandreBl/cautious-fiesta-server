@@ -122,6 +122,42 @@ int GoUdp::timeHandler(GoPlayer &player, Serializer &toRead)
 	return 0;
 }
 
+int GoUdp::stateHandler(GoPlayer &player, Serializer &toRead)
+{
+	int32_t type;
+	uint64_t id;
+
+	if (!toRead.get(type) || !toRead.get(id))
+		return -1;
+	std::cout << player.asString() << " " << toString(UdpPrctl::Type::STATE) << " " << id
+		  << type << std::endl;
+	return 0;
+}
+
+int GoUdp::destroyHandler(GoPlayer &player, Serializer &toRead)
+{
+	int32_t type;
+	uint64_t id;
+
+	if (!toRead.get(type) || !toRead.get(id))
+		return -1;
+	std::cout << player.asString() << " " << toString(UdpPrctl::Type::DESTROY) << " " << id
+		  << type << std::endl;
+	return 0;
+}
+
+int GoUdp::attackHandler(GoPlayer &player, Serializer &toRead)
+{
+	int32_t type;
+	int32_t attack;
+
+	if (!toRead.get(type) || !toRead.get(attack))
+		return -1;
+	std::cout << player.asString() << " " << toString(UdpPrctl::Type::ATTACK) << " " << attack
+		  << type << std::endl;
+	return 0;
+}
+
 int GoUdp::unknownHandler(GoPlayer &player, Serializer &toRead)
 {
 	(void)toRead;

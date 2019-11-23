@@ -3,10 +3,10 @@
 #include "GoUdp.hpp"
 
 namespace cf {
-GoUdp::GoUdp(GameManager &manager, uint16_t port) noexcept
+GoUdp::GoUdp(GameManager &manager) noexcept
 	: _udpService()
 	, _lastRemote()
-	, _commonSocket(_udpService, udp::endpoint(udp::v4(), port))
+	, _commonSocket(_udpService, udp::endpoint(udp::v4(), 0))
 	, _manager(manager)
 {
 	autoBind(UdpPrctl::Type::POSITION, &GoUdp::positionHandler);
@@ -15,6 +15,9 @@ GoUdp::GoUdp(GameManager &manager, uint16_t port) noexcept
 	autoBind(UdpPrctl::Type::SPAWN, &GoUdp::spawnHandler);
 	autoBind(UdpPrctl::Type::INPUT, &GoUdp::inputHandler);
 	autoBind(UdpPrctl::Type::TIME, &GoUdp::timeHandler);
+	autoBind(UdpPrctl::Type::STATE, &GoUdp::stateHandler);
+	autoBind(UdpPrctl::Type::DESTROY, &GoUdp::destroyHandler);
+	autoBind(UdpPrctl::Type::ATTACK, &GoUdp::attackHandler);
 	autoBind(UdpPrctl::Type::UNKNOWN, &GoUdp::unknownHandler);
 	autoBind(UdpPrctl::Type::ACK, &GoUdp::ackHandler);
 }
@@ -95,6 +98,14 @@ GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noe
 void GoUdp::start(sfs::Scene &scene) noexcept
 {
 	(void)scene;
+	auto &connections = _manager.getConnections();
+	uint16_t port = _commonSocket.local_endpoint().port();
+	for (auto &&i : connections) {
+		Serializer s;
+		s.set(port);
+		i->pushPacket(s, TcpPrctl::Type::GAME_STARTED);
+		i->refreshTcp();
+	}
 	asyncReceive();
 }
 

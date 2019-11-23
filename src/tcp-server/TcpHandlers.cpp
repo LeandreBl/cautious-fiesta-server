@@ -31,7 +31,7 @@ int Server::loginHandler(PlayerConnection &handle, Serializer &toRead)
 	handle.pushPacket(answer, TcpPrctl::Type::LOGIN);
 	auto &player = handle.getPlayer();
 	say(isOk,
-	    "~%s logged in { life: %.0f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f "
+	    "~%s logged in { life: %.1f, speed: %.1f, attack: %.1f, attackSpeed: %.1f, armor: %.1f "
 	    "(%.1f%%), color: (r: %d, g: %d, b: %d) }\n",
 	    handle.name().c_str(), player.getLife(), player.getSpeed(), player.getAttack(),
 	    player.getAttackSpeed(), player.getArmor(), player.getArmorCoefficient(),
@@ -321,6 +321,7 @@ int Server::gameStartHandler(PlayerConnection &handle, Serializer &toRead)
 
 	if (!toRead.get(port))
 		return -1;
+	say(true, "~%s set UDP port to %u\n", handle.name().c_str(), port);
 	handle.getUdpRemote().port(port);
 	return 0;
 }

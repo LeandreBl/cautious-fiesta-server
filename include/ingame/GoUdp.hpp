@@ -15,7 +15,7 @@ using boost::asio::ip::udp;
 
 class GoUdp : public sfs::GameObject {
       public:
-	GoUdp(GameManager &manager, uint16_t port) noexcept;
+	GoUdp(GameManager &manager) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 
@@ -37,6 +37,9 @@ class GoUdp : public sfs::GameObject {
 	int spawnHandler(GoPlayer &player, Serializer &toRead);
 	int inputHandler(GoPlayer &player, Serializer &toRead);
 	int timeHandler(GoPlayer &player, Serializer &toRead);
+	int stateHandler(GoPlayer &player, Serializer &toRead);
+	int destroyHandler(GoPlayer &player, Serializer &toRead);
+	int attackHandler(GoPlayer &player, Serializer &toRead);
 	int unknownHandler(GoPlayer &player, Serializer &toRead);
 	int ackHandler(GoPlayer &player, Serializer &toRead);
 	/* private data */
