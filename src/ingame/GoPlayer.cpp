@@ -3,7 +3,7 @@
 
 namespace cf {
 
-GoPlayer::~GoPlayer() noexcept
+void GoPlayer::destroy() noexcept
 {
 	Serializer s;
 
@@ -17,7 +17,7 @@ GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
 	: IGoEntity(position, playerName, player)
 	, _gameManager(manager)
 	, _weapon(nullptr) /* TODO start with a weapon */
-	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0.5, 0.5)))
+	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
 	, _hat(addComponent<sfs::Sprite>())
 	, _spriteName("assets/HAT_61x61.png")
@@ -46,8 +46,8 @@ void GoPlayer::update(sfs::Scene &) noexcept
 		_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 		s.clear();
 		s.set(getId());
-		s.set(_velocity.getSpeed());
-		s.set(_velocity.getAcceleration());
+		s.set(_velocity.speed);
+		s.set(_velocity.acceleration);
 		_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
 	}
 }
@@ -60,16 +60,6 @@ std::string GoPlayer::asString() const noexcept
 sfs::Velocity &GoPlayer::getVelocity() noexcept
 {
 	return _velocity;
-}
-
-void GoPlayer::setStaticSpeed() noexcept
-{
-	_velocity.setAcceleration(sf::Vector2f(1, 1));
-}
-
-void GoPlayer::setFreeSpeed() noexcept
-{
-	_velocity.setAcceleration(sf::Vector2f(0.1, 0.1));
 }
 
 void GoPlayer::collide(IGoEntity &entity) noexcept

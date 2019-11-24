@@ -45,7 +45,6 @@ class PlayerConnection {
 	void pushPacket(Serializer &packet, TcpPrctl::Type type) noexcept;
 	void refreshTcp() noexcept;
 	void setUdpPort(uint16_t port) noexcept;
-	void pushUdp(Serializer &packet, UdpPrctl::Type type) noexcept;
 	void refreshUdp() noexcept;
 	void setPlayer(const Stats::stats &stats, const sf::Color &color) noexcept;
 	Stats &getPlayer() noexcept;
@@ -53,6 +52,7 @@ class PlayerConnection {
 	udp::endpoint &getUdpRemote() noexcept;
 	Serializer &getUdpSerializer() noexcept;
 	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
+	void pushUdpAck(UdpPrctl &header) noexcept;
 	void refreshUdp(udp::socket &socket) noexcept;
 	void notifyUdpReceive(uint16_t pktIndex) noexcept;
 

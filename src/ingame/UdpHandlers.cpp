@@ -81,30 +81,36 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 			}
 			break;
 		case UdpPrctl::inputType::UP:
-			player.getVelocity().addSpeed(sf::Vector2f(0, -player.getSpeed()));
-			player.setStaticSpeed();
+			player.getVelocity().speed.y = player.getSpeed();
+			player.getVelocity().acceleration.y = 1;
 			break;
 		case UdpPrctl::inputType::LEFT:
-			player.getVelocity().addSpeed(sf::Vector2f(-player.getSpeed(), 0));
-			player.setStaticSpeed();
+			player.getVelocity().speed.x = player.getSpeed();
+			player.getVelocity().acceleration.x = 1;
 			break;
 		case UdpPrctl::inputType::DOWN:
-			player.getVelocity().addSpeed(sf::Vector2f(0, player.getSpeed()));
-			player.setStaticSpeed();
+			player.getVelocity().speed.y = player.getSpeed();
+			player.getVelocity().acceleration.y = 1;
 			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.getVelocity().addSpeed(sf::Vector2f(player.getSpeed(), 0));
-			player.setStaticSpeed();
+			player.getVelocity().speed.x = player.getSpeed();
+			player.getVelocity().acceleration.x = 1;
 			break;
 		}
 		break;
 	case UdpPrctl::inputAction::RELEASED:
 		switch (static_cast<UdpPrctl::inputType>(type)) {
 		case UdpPrctl::inputType::UP:
+			player.getVelocity().acceleration.y = 0;
+			break;
 		case UdpPrctl::inputType::LEFT:
+			player.getVelocity().acceleration.x = 0;
+			break;
 		case UdpPrctl::inputType::DOWN:
+			player.getVelocity().acceleration.y = 0;
+			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.setFreeSpeed();
+			player.getVelocity().acceleration.x = 0;
 			break;
 		}
 	}

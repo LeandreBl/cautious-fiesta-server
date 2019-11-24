@@ -13,8 +13,7 @@
 #include "PlayerConnection.hpp"
 #include "GameRoom.hpp"
 
-namespace cf
-{
+namespace cf {
 class Server;
 struct AssetHandler {
 	AssetHandler(Server &server, const std::string &filename) noexcept;
@@ -28,21 +27,20 @@ struct AssetHandler {
 	std::ifstream file;
 	char buffer[4096];
 };
-class Server
-{
+class Server {
       public:
 	Server(uint16_t tcpPort = 2121, uint16_t udpPort = 2122) noexcept;
 	~Server() = default;
 	void run() noexcept;
 	void stop() noexcept;
 	void kick(PlayerConnection &handle) noexcept;
-	int packetHandler(PlayerConnection &handle,
-			  const TcpPrctl &packetHeader,
+	int packetHandler(PlayerConnection &handle, const TcpPrctl &packetHeader,
 			  Serializer &payload) noexcept;
 	void refreshTcpConnections() noexcept;
 	boost::asio::io_service &getService() noexcept;
 
       protected:
+	void kickFromRoom(GameRoom &room) noexcept;
 	void kickRoomPlayers(PlayerConnection &handle) noexcept;
 	void handleNewConnection();
 	int loginHandler(PlayerConnection &handle, Serializer &toRead);
@@ -52,12 +50,9 @@ class Server
 	int getGameRoomsHandler(PlayerConnection &handle, Serializer &toRead);
 	int joinGameRoomHandler(PlayerConnection &handle, Serializer &toRead);
 	int leaveGameRoomHandler(PlayerConnection &handle, Serializer &toRead);
-	int getGameRoomPlayersListHandler(PlayerConnection &handle,
-					  Serializer &toRead);
-	int sendGameRoomMessageHandler(PlayerConnection &handle,
-				       Serializer &toRead);
-	int receiveGameRoomMessageHandler(PlayerConnection &handle,
-					  Serializer &toRead);
+	int getGameRoomPlayersListHandler(PlayerConnection &handle, Serializer &toRead);
+	int sendGameRoomMessageHandler(PlayerConnection &handle, Serializer &toRead);
+	int receiveGameRoomMessageHandler(PlayerConnection &handle, Serializer &toRead);
 	int toggleReadyHandler(PlayerConnection &handle, Serializer &toRead);
 	int requireAssetHandler(PlayerConnection &handle, Serializer &toRead);
 	int sendAssetHandler(PlayerConnection &handle, Serializer &toRead);
@@ -72,13 +67,11 @@ class Server
 	int deleteGameRoom(const std::string &name) noexcept;
 
 	void fillGameRooms(Serializer &packet) const noexcept;
-	void fillGameRoomPlayers(const std::string &roomName,
-				 Serializer &packet) const noexcept;
+	void fillGameRoomPlayers(const std::string &roomName, Serializer &packet) const noexcept;
 	template <typename... Args> void autoBind(TcpPrctl::Type type, Args... args)
 	{
 		_callbacks[static_cast<int>(type)] =
-			std::bind(args..., this, std::placeholders::_1,
-				  std::placeholders::_2);
+			std::bind(args..., this, std::placeholders::_1, std::placeholders::_2);
 	}
 
 	template <typename... Args>
@@ -88,10 +81,8 @@ class Server
 		trace(format, args...);
 	}
 
-	void assetListenerCallback(AssetHandler &handler,
-				   const boost::system::error_code &err);
-	void assetWriterCallback(AssetHandler &handler,
-				 const boost::system::error_code &err);
+	void assetListenerCallback(AssetHandler &handler, const boost::system::error_code &err);
+	void assetWriterCallback(AssetHandler &handler, const boost::system::error_code &err);
 
 	void gameRoomTermination(GameRoom &room);
 

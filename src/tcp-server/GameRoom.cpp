@@ -18,9 +18,11 @@ GameRoom::~GameRoom() noexcept
 
 	packet.set(true);
 	for (auto &&i : _players) {
-		i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
-		i->refreshTcp();
-		i->leaveRoom();
+		if (i->isLogged()) {
+			i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
+			i->refreshTcp();
+			i->leaveRoom();
+		}
 	}
 	trace(true, "#%s has terminated\n", _name.c_str());
 }
@@ -72,6 +74,12 @@ void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcep
 	_thread->detach();
 	trace(_thread != nullptr, "#%s started with %zu player(s).\n", _name.c_str(),
 	      _players.size());
+}
+
+void GameRoom::stop() noexcept
+{
+	if (_scene)
+		_scene->close();
 }
 
 bool GameRoom::isRunning() const noexcept

@@ -60,18 +60,20 @@ void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
 
 int Server::deleteGameRoom(const std::string &name) noexcept
 {
-	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it)
+	for (auto it = _gameRooms.begin(); it != _gameRooms.end(); ++it) {
 		if (it->getName() == name) {
 			say(true, "{%s} deleted\n", name.c_str());
 			_gameRooms.erase(it);
 			return 0;
 		}
-	for (auto it = _runningGameRooms.begin(); it != _runningGameRooms.end(); ++it)
+	}
+	for (auto it = _runningGameRooms.begin(); it != _runningGameRooms.end(); ++it) {
 		if (it->getName() == name) {
 			say(true, "{%s} deleted\n", name.c_str());
 			_runningGameRooms.erase(it);
 			return 0;
 		}
+	}
 	return -1;
 }
 
@@ -89,12 +91,8 @@ void Server::startGameRoom(const GameRoom &room) noexcept
 
 void Server::gameRoomTermination(GameRoom &room)
 {
-	for (auto it = _runningGameRooms.begin(); it != _runningGameRooms.end(); ++it) {
-		if (it->getName() == room.getName()) {
-			_runningGameRooms.erase(it);
-			return;
-		}
-	}
+	kickFromRoom(room);
+	deleteGameRoom(room.getName());
 }
 
 void Server::sendRequiredAssets(PlayerConnection &handle) noexcept

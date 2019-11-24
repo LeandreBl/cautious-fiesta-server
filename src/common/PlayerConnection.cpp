@@ -221,6 +221,11 @@ void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) no
 		_udpIndex = 0;
 }
 
+void PlayerConnection::pushUdpAck(UdpPrctl &header) noexcept
+{
+	_toWriteUdp.emplace_back(header, Serializer(header));
+}
+
 void PlayerConnection::refreshUdp(udp::socket &socket) noexcept
 {
 	for (auto &&i : _toWriteUdp) {
