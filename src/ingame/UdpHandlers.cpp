@@ -62,8 +62,8 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 	int32_t action;
 	int32_t type;
 
-	if (!toRead.get(action) || !toRead.get(type))
-		return -1;
+	toRead >> action;
+	toRead >> type;
 	IGoWeapon *weapon;
 	switch (static_cast<UdpPrctl::inputAction>(action)) {
 	case UdpPrctl::inputAction::PRESSED:
@@ -81,19 +81,19 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &toRead)
 			}
 			break;
 		case UdpPrctl::inputType::UP:
-			player.getVelocity().speed.y = player.getSpeed();
+			player.getVelocity().speed.y = -player.getSpeed() * 10;
 			player.getVelocity().acceleration.y = 1;
 			break;
 		case UdpPrctl::inputType::LEFT:
-			player.getVelocity().speed.x = player.getSpeed();
+			player.getVelocity().speed.x = -player.getSpeed() * 10;
 			player.getVelocity().acceleration.x = 1;
 			break;
 		case UdpPrctl::inputType::DOWN:
-			player.getVelocity().speed.y = player.getSpeed();
+			player.getVelocity().speed.y = player.getSpeed() * 10;
 			player.getVelocity().acceleration.y = 1;
 			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.getVelocity().speed.x = player.getSpeed();
+			player.getVelocity().speed.x = player.getSpeed() * 10;
 			player.getVelocity().acceleration.x = 1;
 			break;
 		}

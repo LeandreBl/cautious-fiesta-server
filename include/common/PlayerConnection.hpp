@@ -52,7 +52,7 @@ class PlayerConnection {
 	udp::endpoint &getUdpRemote() noexcept;
 	Serializer &getUdpSerializer() noexcept;
 	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
-	void pushUdpAck(UdpPrctl &header) noexcept;
+	void sendUdpAck(udp::socket &socket, UdpPrctl &header) noexcept;
 	void refreshUdp(udp::socket &socket) noexcept;
 	void notifyUdpReceive(uint16_t pktIndex) noexcept;
 

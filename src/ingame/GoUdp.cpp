@@ -52,11 +52,11 @@ void GoUdp::testAndEmplace(PlayerConnection &net) noexcept
 		}
 		else if (net.getUdpSerializer().getSize() >= p.getLength()) {
 			auto *go = getPlayerFromConnection(net);
-			if (go != nullptr)
+			if (go != nullptr) {
 				_toProcess.emplace(p, net, *go);
-		}
-		else {
-			net.getUdpSerializer().forceSetFirst(p.getNativeHandle());
+				p.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
+				net.sendUdpAck(_commonSocket, p);
+			}
 		}
 	}
 }
@@ -75,10 +75,7 @@ void GoUdp::testAndEmplace(PlayerConnection &net, GoPlayer &player) noexcept
 		else if (net.getUdpSerializer().getSize() >= p.getLength()) {
 			_toProcess.emplace(p, net, player);
 			p.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
-			net.pushUdpAck(p);
-		}
-		else {
-			net.getUdpSerializer().forceSetFirst(p.getNativeHandle());
+			net.sendUdpAck(_commonSocket, p);
 		}
 	}
 }
@@ -98,13 +95,11 @@ void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_co
 
 void GoUdp::executePackets() noexcept
 {
-
 	while (!_toProcess.empty()) {
 		auto &p = _toProcess.front();
 		auto &header = std::get<0>(p);
 		auto &net = std::get<1>(p);
 		auto &go = std::get<2>(p);
-
 		_callbacks[static_cast<int>(header.getType())](go, net.getUdpSerializer());
 		testAndEmplace(net, go);
 		_toProcess.pop();

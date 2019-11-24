@@ -87,7 +87,7 @@ Serializer GoPlayer::serialize() const noexcept
 {
 	Serializer s;
 
-	s.set(static_cast<int32_t>(UdpPrctl::objType::PLAYER));
+	s.set(static_cast<int32_t>(UdpPrctl::spawnType::PLAYER));
 	s.set(getId());
 	s.set(getName());
 	s.set(getLife());

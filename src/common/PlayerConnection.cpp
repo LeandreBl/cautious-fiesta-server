@@ -221,9 +221,11 @@ void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) no
 		_udpIndex = 0;
 }
 
-void PlayerConnection::pushUdpAck(UdpPrctl &header) noexcept
+void PlayerConnection::sendUdpAck(udp::socket &socket, UdpPrctl &header) noexcept
 {
-	_toWriteUdp.emplace_back(header, Serializer(header));
+	socket.send_to(
+		boost::asio::buffer(&header.getNativeHandle(), sizeof(header.getNativeHandle())),
+		_udpRemote);
 }
 
 void PlayerConnection::refreshUdp(udp::socket &socket) noexcept
