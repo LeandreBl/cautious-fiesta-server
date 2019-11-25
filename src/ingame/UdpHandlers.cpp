@@ -10,8 +10,7 @@ int GoUdp::positionHandler(GoPlayer &player, Serializer &s)
 	uint32_t index;
 	sf::Vector2f position;
 
-	s >> index;
-	s >> position;
+	s >> index >> position;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::POSITION) << " [" << index
 		  << "] " << position << std::endl;
 	return 0;
@@ -23,9 +22,7 @@ int GoUdp::velocityHandler(GoPlayer &player, Serializer &s)
 	sf::Vector2f speed;
 	sf::Vector2f acceleration;
 
-	s >> index;
-	s >> speed;
-	s >> acceleration;
+	s >> index >> speed >> acceleration;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::VELOCITY) << " [" << index
 		  << "] " << speed << "p.s-1 " << acceleration << "p.s-2" << std::endl;
 	return 0;
@@ -38,10 +35,7 @@ int GoUdp::spriteHandler(GoPlayer &player, Serializer &s)
 	sf::Vector2f scale;
 	float rotation;
 
-	s >> index;
-	s >> offset;
-	s >> scale;
-	s >> rotation;
+	s >> index >> offset >> scale >> rotation;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::SPRITE) << " [" << index
 		  << "] " << offset << "offset " << scale << "% " << rotation << "°" << std::endl;
 	return 0;
@@ -52,8 +46,7 @@ int GoUdp::spawnHandler(GoPlayer &player, Serializer &s)
 	int32_t type;
 	uint32_t index;
 
-	s >> type;
-	s >> index;
+	s >> type >> index;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::SPAWN) << " [" << index
 		  << "] " << type << std::endl;
 	return 0;
@@ -134,8 +127,7 @@ int GoUdp::stateHandler(GoPlayer &player, Serializer &s)
 	int32_t type;
 	uint64_t id;
 
-	s >> type;
-	s >> id;
+	s >> type >> id;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::STATE) << " " << id
 		  << type << std::endl;
 	return 0;
@@ -146,8 +138,7 @@ int GoUdp::destroyHandler(GoPlayer &player, Serializer &s)
 	int32_t type;
 	uint64_t id;
 
-	s >> type;
-	s >> id;
+	s >> type >> id;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::DESTROY) << " " << id
 		  << type << std::endl;
 	return 0;
@@ -158,8 +149,7 @@ int GoUdp::attackHandler(GoPlayer &player, Serializer &s)
 	int32_t type;
 	int32_t attack;
 
-	s >> type;
-	s >> attack;
+	s >> type >> attack;
 	std::cout << player.asString() << " " << toString(UdpPrctl::Type::ATTACK) << " " << attack
 		  << type << std::endl;
 	return 0;
@@ -175,7 +165,7 @@ int GoUdp::unknownHandler(GoPlayer &player, Serializer &s)
 int GoUdp::ackHandler(GoPlayer &player, Serializer &s)
 {
 	(void)s;
-	std::cout << player.asString() << " " << toString(UdpPrctl::Type::ACK) << std::endl;
+	(void)player;
 	return 0;
 }
 } // namespace cf

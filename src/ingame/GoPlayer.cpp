@@ -29,7 +29,9 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 {
 	auto *texture = scene.getAssetTexture(_spriteName);
 	if (texture == nullptr) {
-		std::cerr << "Unable to find " << _spriteName << " asset" << std::endl;
+		std::cerr << "Unable to find " << _spriteName << " asset"
+			  << "\r";
+		std::cerr.flush();
 	}
 	else {
 		_hat.setTexture(*texture, true);
@@ -41,13 +43,11 @@ void GoPlayer::update(sfs::Scene &) noexcept
 {
 	if (getPosition() != _prevPosition.getPrevPosition()) {
 		Serializer s;
-		s << getId();
-		s << getPosition();
+		s << getId() << getPosition().x << getPosition().y;
 		_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 		s.clear();
-		s << getId();
-		s << _velocity.speed;
-		s << _velocity.acceleration;
+		s << getId() << _velocity.speed.x << _velocity.speed.y << _velocity.acceleration.x
+		  << _velocity.acceleration.y;
 		_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
 	}
 }
@@ -87,17 +87,9 @@ Serializer GoPlayer::serialize() const noexcept
 {
 	Serializer s;
 
-	s << static_cast<int32_t>(UdpPrctl::spawnType::PLAYER);
-	s << getId();
-	s << getName();
-	s << getLife();
-	s << getSpeed();
-	s << getAttack();
-	s << getAttackSpeed();
-	s << getArmor();
-	s << getColor();
-	s << _spriteName;
-	s << static_cast<int32_t>(UdpPrctl::weaponType::NONE);
+	s << static_cast<int32_t>(UdpPrctl::spawnType::PLAYER) << getId() << getName() << getLife()
+	  << getSpeed() << getAttack() << getAttackSpeed() << getArmor() << getColor()
+	  << _spriteName << static_cast<int32_t>(UdpPrctl::weaponType::NONE);
 	return s;
 }
 

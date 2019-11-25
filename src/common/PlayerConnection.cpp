@@ -209,11 +209,6 @@ udp::endpoint &PlayerConnection::getUdpRemote() noexcept
 	return _udpRemote;
 }
 
-Serializer &PlayerConnection::getUdpSerializer() noexcept
-{
-	return _udpSerializer;
-}
-
 void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept
 {
 	_toWriteUdp.emplace_back(UdpPrctl(type, packet.getSize(), _udpIndex++), packet);
@@ -221,15 +216,18 @@ void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) no
 		_udpIndex = 0;
 }
 
-void PlayerConnection::sendUdpAck(udp::socket &socket, UdpPrctl &header) noexcept
+void PlayerConnection::pushUdpAck(const UdpPrctl &header) noexcept
 {
-	socket.send_to(
-		boost::asio::buffer(&header.getNativeHandle(), sizeof(header.getNativeHandle())),
-		_udpRemote);
+	_ackQueue.emplace(UdpPrctl::Type::ACK, 0, header.getIndex());
 }
 
 void PlayerConnection::refreshUdp(udp::socket &socket) noexcept
 {
+	while (!_ackQueue.empty()) {
+		auto &p = _ackQueue.front();
+		socket.send_to(boost::asio::buffer(&p.getNativeHandle(), sizeof(p)), _udpRemote);
+		_ackQueue.pop();
+	}
 	for (auto &&i : _toWriteUdp) {
 		std::array<boost::asio::const_buffer, 2> v;
 		v[0] = boost::asio::buffer(&i.first.getNativeHandle(),

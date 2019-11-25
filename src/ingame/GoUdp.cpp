@@ -23,7 +23,7 @@ GoUdp::GoUdp(GameManager &manager) noexcept
 
 void GoUdp::asyncReceive(PlayerConnection &connection) noexcept
 {
-	_commonSocket.async_receive_from(boost::asio::buffer(_commonBuffer),
+	_commonSocket.async_receive_from(boost::asio::buffer(connection.getJitterBuffer()),
 					 connection.getUdpRemote(),
 					 boost::bind(&GoUdp::onUpdate, this, std::ref(connection),
 						     boost::asio::placeholders::error,
@@ -39,29 +39,6 @@ PlayerConnection *GoUdp::getClient(const udp::endpoint &remote) const noexcept
 	return nullptr;
 }
 
-void GoUdp::testAndEmplace(PlayerConnection &net, GoPlayer &player) noexcept
-{
-	if (net.getUdpSerializer().getSize() >= sizeof(UdpPrctl::udpHeader)) {
-		UdpPrctl header;
-		net.getUdpSerializer() >>= header;
-		if (!header.isCorrect())
-			net.getUdpSerializer().clear();
-		else if (header.getType() == UdpPrctl::Type::ACK) {
-			net.getUdpSerializer().shift(sizeof(UdpPrctl::udpHeader));
-			net.notifyUdpReceive(header.getIndex());
-		}
-		else if (net.getUdpSerializer().getSize()
-			 >= (header.getLength() + sizeof(UdpPrctl::udpHeader))) {
-			net.getUdpSerializer().shift(sizeof(UdpPrctl::udpHeader));
-			_toProcess.emplace(header,
-					   Serializer(net.getUdpSerializer(), header.getLength()),
-					   net, player);
-			header.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
-			net.sendUdpAck(_commonSocket, header);
-		}
-	}
-}
-
 void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
 		     std::size_t bytes_transferred)
 {
@@ -70,25 +47,29 @@ void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_co
 		return;
 	}
 	asyncReceive(connection);
-	connection.getUdpSerializer().nativeSet(_commonBuffer.data(), bytes_transferred);
+	if (bytes_transferred < sizeof(UdpPrctl))
+		return;
+	Serializer s;
+	s.nativeSet(connection.getJitterBuffer().data(), bytes_transferred);
 	auto *go = getPlayerFromConnection(connection);
-	if (go != nullptr)
-		testAndEmplace(connection, *go);
-	executePackets();
+	UdpPrctl header;
+	s >> header;
+	if (s.getSize() < header.getLength())
+		return;
+	if (go != nullptr) {
+		if (header.getType() == UdpPrctl::Type::ACK) {
+			connection.notifyUdpReceive(header.getIndex());
+		}
+		else {
+			connection.pushUdpAck(header);
+			executePackets(*go, header, s);
+		}
+	}
 }
 
-void GoUdp::executePackets() noexcept
+void GoUdp::executePackets(GoPlayer &player, const UdpPrctl &header, Serializer &s) noexcept
 {
-	while (!_toProcess.empty()) {
-		auto &p = _toProcess.front();
-		auto &header = std::get<0>(p);
-		auto &serializer = std::get<1>(p);
-		auto &net = std::get<2>(p);
-		auto &go = std::get<3>(p);
-		_callbacks[static_cast<int>(header.getType())](go, serializer);
-		testAndEmplace(net, go);
-		_toProcess.pop();
-	}
+	_callbacks[static_cast<int>(header.getType())](player, s);
 }
 
 GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noexcept
@@ -96,7 +77,7 @@ GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noe
 	const auto &connections = _manager.getConnections();
 
 	for (size_t i = 0; i < connections.size(); ++i) {
-		if (connections[i]->getId() == connection.getId()) {
+		if (connections[i]->getUdpRemote() == connection.getUdpRemote()) {
 			return _manager.getGoPlayers()[i];
 		}
 	}
@@ -116,7 +97,6 @@ void GoUdp::start(sfs::Scene &scene) noexcept
 		asyncReceive(*i);
 	}
 }
-
 void GoUdp::update(sfs::Scene &scene) noexcept
 {
 	(void)scene;

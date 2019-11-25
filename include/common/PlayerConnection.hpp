@@ -4,6 +4,7 @@
 #include <memory>
 #include <queue>
 #include <list>
+#include <array>
 
 #include <Serializer.hpp>
 #include <Tcp.hpp>
@@ -50,11 +51,15 @@ class PlayerConnection {
 	Stats &getPlayer() noexcept;
 
 	udp::endpoint &getUdpRemote() noexcept;
-	Serializer &getUdpSerializer() noexcept;
+
 	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
-	void sendUdpAck(udp::socket &socket, UdpPrctl &header) noexcept;
+	void pushUdpAck(const UdpPrctl &header) noexcept;
 	void refreshUdp(udp::socket &socket) noexcept;
 	void notifyUdpReceive(uint16_t pktIndex) noexcept;
+	auto &getJitterBuffer() noexcept
+	{
+		return _jitterUdpBuffer;
+	}
 
       protected:
 	void asyncReadHeader(const boost::system::error_code &error, std::size_t bytes_transferred);
@@ -72,10 +77,11 @@ class PlayerConnection {
 	udp::endpoint _udpRemote;
 	std::unique_ptr<tcp::socket> _tcpSocket;
 	GameRoom *_room;
+	std::array<int8_t, 1 << 12> _jitterUdpBuffer;
 	std::queue<Serializer> _toWrite;
+	std::queue<UdpPrctl> _ackQueue;
 	std::list<std::pair<UdpPrctl, Serializer>> _toWriteUdp;
 	uint16_t _udpIndex;
-	Serializer _udpSerializer;
 	Server &_server;
 	Stats _player;
 	bool _ready;
