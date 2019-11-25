@@ -9,10 +9,10 @@ namespace cf {
 
 void Server::fillGameRooms(Serializer &packet) const noexcept
 {
-	packet.set((uint64_t)_gameRooms.size());
+	packet << (uint64_t)_gameRooms.size();
 	for (auto &&i : _gameRooms) {
-		packet.set((uint64_t)i.getPlayers().size());
-		packet.set(i.getName());
+		packet << (uint64_t)i.getPlayers().size();
+		packet << i.getName();
 	}
 }
 
@@ -20,19 +20,19 @@ void Server::fillGameRoomPlayers(const std::string &roomName, Serializer &packet
 {
 	for (auto &&i : _gameRooms) {
 		if (i.getName() == roomName) {
-			packet.set(true);
-			packet.set(i.getName());
-			packet.set((uint64_t)i.getPlayers().size());
+			packet << true;
+			packet << i.getName();
+			packet << (uint64_t)i.getPlayers().size();
 			for (auto &&i : i.getPlayers()) {
-				packet.set(i->ready());
-				packet.set(i->name());
+				packet << i->ready();
+				packet << i->name();
 			}
 			return;
 		}
 	}
-	packet.set(false);
-	packet.set(std::string(""));
-	packet.set((uint64_t)0);
+	packet << false;
+	packet << std::string("");
+	packet << (uint64_t)0;
 }
 
 void Server::resendGameRoomsHandler() noexcept
@@ -51,7 +51,7 @@ void Server::kickRoomPlayers(PlayerConnection &handle) noexcept
 	Serializer packet;
 	auto &room = handle.room();
 
-	packet.set(true);
+	packet << true;
 	for (auto &&i : room.getPlayers()) {
 		i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
 		i->leaveRoom();
@@ -104,9 +104,9 @@ void Server::sendRequiredAssets(PlayerConnection &handle) noexcept
 	for (auto &&f : folder) {
 		if (f.is_regular_file()) {
 			++n;
-			answer.set(f.path().string());
-			answer.set(static_cast<uint64_t>(f.file_size()));
-			answer.set(static_cast<uint64_t>(common::computeChksum(f.path().string())));
+			answer << f.path().string();
+			answer << static_cast<uint64_t>(f.file_size());
+			answer << static_cast<uint64_t>(common::computeChksum(f.path().string()));
 		}
 	}
 	answer.forceSetFirst(n);

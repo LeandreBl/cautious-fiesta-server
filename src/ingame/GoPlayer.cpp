@@ -7,7 +7,7 @@ void GoPlayer::destroy() noexcept
 {
 	Serializer s;
 
-	s.set(getId());
+	s << getId();
 	_gameManager.updateUdp(s, UdpPrctl::Type::DESTROY);
 	_gameManager.getColliderManager().removeFromAllies(*this);
 }
@@ -41,13 +41,13 @@ void GoPlayer::update(sfs::Scene &) noexcept
 {
 	if (getPosition() != _prevPosition.getPrevPosition()) {
 		Serializer s;
-		s.set(getId());
-		s.set(getPosition());
+		s << getId();
+		s << getPosition();
 		_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 		s.clear();
-		s.set(getId());
-		s.set(_velocity.speed);
-		s.set(_velocity.acceleration);
+		s << getId();
+		s << _velocity.speed;
+		s << _velocity.acceleration;
 		_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
 	}
 }
@@ -87,17 +87,17 @@ Serializer GoPlayer::serialize() const noexcept
 {
 	Serializer s;
 
-	s.set(static_cast<int32_t>(UdpPrctl::spawnType::PLAYER));
-	s.set(getId());
-	s.set(getName());
-	s.set(getLife());
-	s.set(getSpeed());
-	s.set(getAttack());
-	s.set(getAttackSpeed());
-	s.set(getArmor());
-	s.set(getColor());
-	s.set(_spriteName);
-	s.set(static_cast<int32_t>(UdpPrctl::weaponType::NONE));
+	s << static_cast<int32_t>(UdpPrctl::spawnType::PLAYER);
+	s << getId();
+	s << getName();
+	s << getLife();
+	s << getSpeed();
+	s << getAttack();
+	s << getAttackSpeed();
+	s << getArmor();
+	s << getColor();
+	s << _spriteName;
+	s << static_cast<int32_t>(UdpPrctl::weaponType::NONE);
 	return s;
 }
 

@@ -39,43 +39,25 @@ PlayerConnection *GoUdp::getClient(const udp::endpoint &remote) const noexcept
 	return nullptr;
 }
 
-void GoUdp::testAndEmplace(PlayerConnection &net) noexcept
-{
-	if (net.getUdpSerializer().getSize() >= sizeof(UdpPrctl::udpHeader)) {
-		UdpPrctl::udpHeader header;
-		net.getUdpSerializer().get(header);
-		UdpPrctl p(header);
-		if (!p.isCorrect())
-			net.getUdpSerializer().clear();
-		else if (p.getType() == UdpPrctl::Type::ACK) {
-			net.notifyUdpReceive(p.getIndex());
-		}
-		else if (net.getUdpSerializer().getSize() >= p.getLength()) {
-			auto *go = getPlayerFromConnection(net);
-			if (go != nullptr) {
-				_toProcess.emplace(p, net, *go);
-				p.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
-				net.sendUdpAck(_commonSocket, p);
-			}
-		}
-	}
-}
-
 void GoUdp::testAndEmplace(PlayerConnection &net, GoPlayer &player) noexcept
 {
 	if (net.getUdpSerializer().getSize() >= sizeof(UdpPrctl::udpHeader)) {
-		UdpPrctl::udpHeader header;
-		net.getUdpSerializer().get(header);
-		UdpPrctl p(header);
-		if (!p.isCorrect())
+		UdpPrctl header;
+		net.getUdpSerializer() >>= header;
+		if (!header.isCorrect())
 			net.getUdpSerializer().clear();
-		else if (p.getType() == UdpPrctl::Type::ACK) {
-			net.notifyUdpReceive(p.getIndex());
+		else if (header.getType() == UdpPrctl::Type::ACK) {
+			net.getUdpSerializer().shift(sizeof(UdpPrctl::udpHeader));
+			net.notifyUdpReceive(header.getIndex());
 		}
-		else if (net.getUdpSerializer().getSize() >= p.getLength()) {
-			_toProcess.emplace(p, net, player);
-			p.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
-			net.sendUdpAck(_commonSocket, p);
+		else if (net.getUdpSerializer().getSize()
+			 >= (header.getLength() + sizeof(UdpPrctl::udpHeader))) {
+			net.getUdpSerializer().shift(sizeof(UdpPrctl::udpHeader));
+			_toProcess.emplace(header,
+					   Serializer(net.getUdpSerializer(), header.getLength()),
+					   net, player);
+			header.getNativeHandle().type = static_cast<int>(UdpPrctl::Type::ACK);
+			net.sendUdpAck(_commonSocket, header);
 		}
 	}
 }
@@ -89,7 +71,9 @@ void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_co
 	}
 	asyncReceive(connection);
 	connection.getUdpSerializer().nativeSet(_commonBuffer.data(), bytes_transferred);
-	testAndEmplace(connection);
+	auto *go = getPlayerFromConnection(connection);
+	if (go != nullptr)
+		testAndEmplace(connection, *go);
 	executePackets();
 }
 
@@ -98,9 +82,10 @@ void GoUdp::executePackets() noexcept
 	while (!_toProcess.empty()) {
 		auto &p = _toProcess.front();
 		auto &header = std::get<0>(p);
-		auto &net = std::get<1>(p);
-		auto &go = std::get<2>(p);
-		_callbacks[static_cast<int>(header.getType())](go, net.getUdpSerializer());
+		auto &serializer = std::get<1>(p);
+		auto &net = std::get<2>(p);
+		auto &go = std::get<3>(p);
+		_callbacks[static_cast<int>(header.getType())](go, serializer);
 		testAndEmplace(net, go);
 		_toProcess.pop();
 	}
@@ -125,7 +110,7 @@ void GoUdp::start(sfs::Scene &scene) noexcept
 	uint16_t port = _commonSocket.local_endpoint().port();
 	for (auto &&i : connections) {
 		Serializer s;
-		s.set(port);
+		s << port;
 		i->pushPacket(s, TcpPrctl::Type::GAME_STARTED);
 		i->refreshTcp();
 		asyncReceive(*i);

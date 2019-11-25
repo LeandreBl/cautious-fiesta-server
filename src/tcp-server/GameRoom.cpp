@@ -16,7 +16,7 @@ GameRoom::~GameRoom() noexcept
 {
 	Serializer packet;
 
-	packet.set(true);
+	packet << true;
 	for (auto &&i : _players) {
 		if (i->isLogged()) {
 			i->pushPacket(packet, TcpPrctl::Type::LEAVE_GAMEROOM);
@@ -66,8 +66,6 @@ void GameRoom::leave(PlayerConnection &handle) noexcept
 
 void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcept
 {
-	Serializer packet;
-
 	_isRunning = true;
 	_endCallback = std::move(endCallback);
 	_thread = std::make_unique<std::thread>(std::bind(&GameRoom::scene, this));

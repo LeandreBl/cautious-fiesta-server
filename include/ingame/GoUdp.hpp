@@ -22,8 +22,8 @@ class GoUdp : public sfs::GameObject {
       private:
 	GoPlayer *getPlayerFromConnection(PlayerConnection &connection) const noexcept;
 	PlayerConnection *getClient(const udp::endpoint &remote) const noexcept;
-	void onUpdate(PlayerConnection &connection, const boost::system::error_code &error, std::size_t bytes_transferred);
-	void testAndEmplace(PlayerConnection &connection) noexcept;
+	void onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
+		      std::size_t bytes_transferred);
 	void testAndEmplace(PlayerConnection &connection, GoPlayer &player) noexcept;
 	void executePackets() noexcept;
 	void asyncReceive(PlayerConnection &connection) noexcept;
@@ -51,6 +51,6 @@ class GoUdp : public sfs::GameObject {
 	std::array<uint8_t, 1 << 12> _commonBuffer;
 	udp::socket _commonSocket;
 	GameManager &_manager;
-	std::queue<std::tuple<UdpPrctl, PlayerConnection &, GoPlayer &>> _toProcess;
+	std::queue<std::tuple<UdpPrctl, Serializer, PlayerConnection &, GoPlayer &>> _toProcess;
 };
 } // namespace cf
