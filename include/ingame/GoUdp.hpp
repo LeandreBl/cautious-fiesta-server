@@ -15,17 +15,18 @@ using boost::asio::ip::udp;
 
 class GoUdp : public sfs::GameObject {
       public:
-	GoUdp(GameManager &manager) noexcept;
+	GoUdp(GameManager &manager, boost::asio::io_service &service) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 
       private:
+	PlayerConnection *getConnectionFromEndpoint(const tcp::endpoint &endpoint) const noexcept;
 	GoPlayer *getPlayerFromConnection(PlayerConnection &connection) const noexcept;
-	PlayerConnection *getClient(const udp::endpoint &remote) const noexcept;
 	void onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
 		      std::size_t bytes_transferred);
 	void executePackets(GoPlayer &player, const UdpPrctl &header, Serializer &s) noexcept;
 	void asyncReceive(PlayerConnection &connection) noexcept;
+	void pollPackets() noexcept;
 	template <typename... Args> void autoBind(UdpPrctl::Type type, Args... args)
 	{
 		_callbacks[static_cast<int>(type)] =
@@ -46,8 +47,7 @@ class GoUdp : public sfs::GameObject {
 	/* private data */
 	std::function<int(GoPlayer &, Serializer &toRead)>
 		_callbacks[static_cast<int>(UdpPrctl::Type::ACK) + 1];
-	boost::asio::io_service _udpService;
-	udp::socket _commonSocket;
+	boost::asio::io_service &_ingameService;
 	GameManager &_manager;
 };
 } // namespace cf

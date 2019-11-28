@@ -2,8 +2,9 @@
 #include "GameManager.hpp"
 
 namespace cf {
-GameManager::GameManager(GameRoom &room) noexcept
-	: _players()
+GameManager::GameManager(GameRoom &room, boost::asio::io_service &localService) noexcept
+	: _service(localService)
+	, _players()
 	, _gameRoom(room)
 	, _colliderManager(nullptr)
 {
@@ -16,7 +17,7 @@ void GameManager::start(sfs::Scene &scene) noexcept
 							i->getPlayer());
 		_players.push_back(&p);
 	}
-	scene.addGameObject<GoUdp>(*this);
+	scene.addGameObject<GoUdp>(*this, _service);
 	_colliderManager = &scene.addGameObject<ColliderManager>();
 }
 
@@ -38,9 +39,13 @@ const std::vector<PlayerConnection *> &GameManager::getConnections() noexcept
 void GameManager::updateUdp(const Serializer &s, UdpPrctl::Type type) noexcept
 {
 	for (auto &&c : getConnections()) {
-		Serializer sdup = s;
-		c->pushUdpPacket(sdup, type);
+		c->pushUdpPacket(s, type);
 	}
+}
+
+const std::string &GameManager::getName() const noexcept
+{
+	return _gameRoom.getName();
 }
 
 } // namespace cf

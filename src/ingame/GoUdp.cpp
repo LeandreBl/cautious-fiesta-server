@@ -1,11 +1,12 @@
 #include <boost/bind.hpp>
 
+#include <Trace.hpp>
+
 #include "GoUdp.hpp"
 
 namespace cf {
-GoUdp::GoUdp(GameManager &manager) noexcept
-	: _udpService()
-	, _commonSocket(_udpService, udp::endpoint(udp::v4(), 0))
+GoUdp::GoUdp(GameManager &manager, boost::asio::io_service &service) noexcept
+	: _ingameService(service)
 	, _manager(manager)
 {
 	autoBind(UdpPrctl::Type::POSITION, &GoUdp::positionHandler);
@@ -23,20 +24,11 @@ GoUdp::GoUdp(GameManager &manager) noexcept
 
 void GoUdp::asyncReceive(PlayerConnection &connection) noexcept
 {
-	_commonSocket.async_receive_from(boost::asio::buffer(connection.getJitterBuffer()),
-					 connection.getUdpRemote(),
-					 boost::bind(&GoUdp::onUpdate, this, std::ref(connection),
-						     boost::asio::placeholders::error,
-						     boost::asio::placeholders::bytes_transferred));
-}
-
-PlayerConnection *GoUdp::getClient(const udp::endpoint &remote) const noexcept
-{
-	for (auto &&i : _manager.getConnections()) {
-		if (i->getUdpRemote().address() == remote.address())
-			return i;
-	}
-	return nullptr;
+	connection.getIngameSocket().async_receive(
+		boost::asio::buffer(connection.getUdpBuffer().buffer),
+		boost::bind(&GoUdp::onUpdate, this, std::ref(connection),
+			    boost::asio::placeholders::error,
+			    boost::asio::placeholders::bytes_transferred));
 }
 
 void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
@@ -49,22 +41,8 @@ void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_co
 	asyncReceive(connection);
 	if (bytes_transferred < sizeof(UdpPrctl))
 		return;
-	Serializer s;
-	s.nativeSet(connection.getJitterBuffer().data(), bytes_transferred);
-	auto *go = getPlayerFromConnection(connection);
-	UdpPrctl header;
-	s >> header;
-	if (s.getSize() < header.getLength())
-		return;
-	if (go != nullptr) {
-		if (header.getType() == UdpPrctl::Type::ACK) {
-			connection.notifyUdpReceive(header.getIndex());
-		}
-		else {
-			connection.pushUdpAck(header);
-			executePackets(*go, header, s);
-		}
-	}
+	connection.getUdpBuffer().serializer.nativeSet(connection.getUdpBuffer().buffer.data(),
+						       bytes_transferred);
 }
 
 void GoUdp::executePackets(GoPlayer &player, const UdpPrctl &header, Serializer &s) noexcept
@@ -77,7 +55,7 @@ GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noe
 	const auto &connections = _manager.getConnections();
 
 	for (size_t i = 0; i < connections.size(); ++i) {
-		if (connections[i]->getUdpRemote() == connection.getUdpRemote()) {
+		if (connections[i]->getId() == connection.getId()) {
 			return _manager.getGoPlayers()[i];
 		}
 	}
@@ -87,21 +65,56 @@ GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noe
 void GoUdp::start(sfs::Scene &scene) noexcept
 {
 	(void)scene;
+	tcp::acceptor listener(_ingameService, tcp::endpoint(tcp::v4(), 0));
 	auto &connections = _manager.getConnections();
-	uint16_t port = _commonSocket.local_endpoint().port();
+	uint16_t port = listener.local_endpoint().port();
 	for (auto &&i : connections) {
 		Serializer s;
 		s << port;
 		i->pushPacket(s, TcpPrctl::Type::GAME_STARTED);
 		i->refreshTcp();
+		tcp::socket &socket = i->setSocket(_ingameService);
+		boost::system::error_code e;
+		listener.accept(socket, e);
+		if (e) {
+			trace(false, "~%s failed to join #%s (stopping ...)\n", i->name().c_str(),
+			      _manager.getName().c_str());
+			scene.clear();
+			scene.close();
+			return;
+		}
+		trace(true, "~%s joined ingame #%s\n", i->name().c_str(),
+		      _manager.getName().c_str());
+	}
+	trace(true, "#%s started with %zu player(s).\n", _manager.getName().c_str(),
+	      connections.size());
+	for (auto &&i : connections)
 		asyncReceive(*i);
+}
+
+void GoUdp::pollPackets() noexcept
+{
+	for (auto &&i : _manager.getConnections()) {
+		auto &s = i->getUdpBuffer().serializer;
+		if (s.getSize() < sizeof(UdpPrctl))
+			return;
+		UdpPrctl header;
+		s >>= header;
+		if (s.getSize() < header.getLength() + sizeof(header))
+			return;
+		s.shift(sizeof(header));
+		auto *go = getPlayerFromConnection(*i);
+		if (go != nullptr)
+			executePackets(*go, header, s);
 	}
 }
+
 void GoUdp::update(sfs::Scene &scene) noexcept
 {
 	(void)scene;
-	_udpService.poll();
+	_ingameService.poll();
+	pollPackets();
 	for (auto &&i : _manager.getConnections())
-		i->refreshUdp(_commonSocket);
+		i->refreshUdp();
 }
 } // namespace cf

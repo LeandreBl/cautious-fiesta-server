@@ -76,36 +76,41 @@ int GoUdp::inputHandler(GoPlayer &player, Serializer &s)
 			}
 			break;
 		case UdpPrctl::inputType::UP:
-			player.getVelocity().speed.y = -player.getSpeed() * 10;
-			player.getVelocity().acceleration.y = 1;
+
+			player.updateMovementMatrix(UdpPrctl::inputType::UP,
+						    UdpPrctl::inputAction::PRESSED);
 			break;
 		case UdpPrctl::inputType::LEFT:
-			player.getVelocity().speed.x = -player.getSpeed() * 10;
-			player.getVelocity().acceleration.x = 1;
+			player.updateMovementMatrix(UdpPrctl::inputType::LEFT,
+						    UdpPrctl::inputAction::PRESSED);
 			break;
 		case UdpPrctl::inputType::DOWN:
-			player.getVelocity().speed.y = player.getSpeed() * 10;
-			player.getVelocity().acceleration.y = 1;
+			player.updateMovementMatrix(UdpPrctl::inputType::DOWN,
+						    UdpPrctl::inputAction::PRESSED);
 			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.getVelocity().speed.x = player.getSpeed() * 10;
-			player.getVelocity().acceleration.x = 1;
+			player.updateMovementMatrix(UdpPrctl::inputType::RIGHT,
+						    UdpPrctl::inputAction::PRESSED);
 			break;
 		}
 		break;
 	case UdpPrctl::inputAction::RELEASED:
 		switch (static_cast<UdpPrctl::inputType>(type)) {
 		case UdpPrctl::inputType::UP:
-			player.getVelocity().acceleration.y = 0;
+			player.updateMovementMatrix(UdpPrctl::inputType::UP,
+						    UdpPrctl::inputAction::RELEASED);
 			break;
 		case UdpPrctl::inputType::LEFT:
-			player.getVelocity().acceleration.x = 0;
+			player.updateMovementMatrix(UdpPrctl::inputType::LEFT,
+						    UdpPrctl::inputAction::RELEASED);
 			break;
 		case UdpPrctl::inputType::DOWN:
-			player.getVelocity().acceleration.y = 0;
+			player.updateMovementMatrix(UdpPrctl::inputType::DOWN,
+						    UdpPrctl::inputAction::RELEASED);
 			break;
 		case UdpPrctl::inputType::RIGHT:
-			player.getVelocity().acceleration.x = 0;
+			player.updateMovementMatrix(UdpPrctl::inputType::RIGHT,
+						    UdpPrctl::inputAction::RELEASED);
 			break;
 		}
 	}

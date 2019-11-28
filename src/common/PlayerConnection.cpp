@@ -7,15 +7,15 @@
 #include "Server.hpp"
 
 namespace cf {
+static int id = 0;
 PlayerConnection::PlayerConnection(std::unique_ptr<tcp::socket> &socket, Server &server) noexcept
-	: _service()
+	: _id(id++)
 	, _header()
 	, _rd(0)
 	, _netBuffer()
 	, _toRead(0)
 	, _name("")
-	, _udpRemote(udp::endpoint(socket->remote_endpoint().address(),
-				   socket->remote_endpoint().port()))
+	, _ingameSocket()
 	, _tcpSocket(std::move(socket))
 	, _room(nullptr)
 	, _toWrite()
@@ -135,18 +135,33 @@ void PlayerConnection::room(GameRoom &room) noexcept
 
 int PlayerConnection::getId() const noexcept
 {
-	return (int)_tcpSocket->lowest_layer().native_handle();
+	return _id;
 }
 
 void PlayerConnection::close() noexcept
 {
 	try {
-		_tcpSocket->shutdown(tcp::socket::shutdown_receive);
+		_tcpSocket->shutdown(tcp::socket::shutdown_both);
 		_tcpSocket->close();
 	}
 	catch (const boost::system::system_error &error) {
+		std::cerr << error.what() << std::endl;
 	}
 	_name.clear();
+}
+
+void PlayerConnection::closeUdp() noexcept
+{
+	try {
+		_ingameSocket->shutdown(tcp::socket::shutdown_both);
+		_ingameSocket->close();
+	}
+	catch (const boost::system::system_error &error) {
+		std::cerr << error.what() << std::endl;
+	}
+	while (!_toWriteUdp.empty())
+		_toWriteUdp.pop();
+	_udpBuffer.serializer.clear();
 }
 
 void PlayerConnection::assetReady(bool state) noexcept
@@ -204,46 +219,39 @@ Stats &PlayerConnection::getPlayer() noexcept
 	return _player;
 }
 
-udp::endpoint &PlayerConnection::getUdpRemote() noexcept
+struct netBuffer &PlayerConnection::getUdpBuffer() noexcept
 {
-	return _udpRemote;
+	return _udpBuffer;
 }
 
-void PlayerConnection::pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept
+tcp::socket &PlayerConnection::setSocket(boost::asio::io_service &service) noexcept
 {
-	_toWriteUdp.emplace_back(UdpPrctl(type, packet.getSize(), _udpIndex++), packet);
-	if (_udpIndex >= UINT16_MAX - 10)
-		_udpIndex = 0;
+	_ingameSocket = std::make_unique<tcp::socket>(service);
+	return *_ingameSocket;
 }
 
-void PlayerConnection::pushUdpAck(const UdpPrctl &header) noexcept
+void PlayerConnection::pushUdpPacket(const Serializer &packet, UdpPrctl::Type type) noexcept
 {
-	_ackQueue.emplace(UdpPrctl::Type::ACK, 0, header.getIndex());
+	_toWriteUdp.emplace(packet, type, _udpIndex++);
 }
 
-void PlayerConnection::refreshUdp(udp::socket &socket) noexcept
+tcp::socket &PlayerConnection::getIngameSocket() noexcept
 {
-	while (!_ackQueue.empty()) {
-		auto &p = _ackQueue.front();
-		socket.send_to(boost::asio::buffer(&p.getNativeHandle(), sizeof(p)), _udpRemote);
-		_ackQueue.pop();
-	}
-	for (auto &&i : _toWriteUdp) {
-		std::array<boost::asio::const_buffer, 2> v;
-		v[0] = boost::asio::buffer(&i.first.getNativeHandle(),
-					   sizeof(i.first.getNativeHandle()));
-		v[1] = boost::asio::buffer(i.second.getNativeHandle(), i.second.getSize());
-		socket.send_to(v, _udpRemote);
-	}
+	return *_ingameSocket;
 }
 
-void PlayerConnection::notifyUdpReceive(uint16_t pktIndex) noexcept
+void PlayerConnection::refreshUdp() noexcept
 {
-	for (auto it = _toWriteUdp.begin(); it != _toWriteUdp.end(); ++it) {
-		if (it->first.getIndex() == pktIndex) {
-			_toWriteUdp.erase(it);
+	while (!_toWriteUdp.empty()) {
+		auto &p = _toWriteUdp.front();
+		int flg = 0;
+		boost::system::error_code e;
+		_ingameSocket->send(boost::asio::buffer(p.getNativeHandle(), p.getSize()), flg, e);
+		if (e) {
+			trace(false, "~%s: %s\n", _name.c_str(), e.message().c_str());
 			return;
 		}
+		_toWriteUdp.pop();
 	}
 }
 } // namespace cf

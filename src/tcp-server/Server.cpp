@@ -25,6 +25,7 @@ Server::Server(uint16_t tcpPort, uint16_t udpPort) noexcept
 		say(false, "Error: Unable to run on port %u\n", _tcpPort);
 		return;
 	}
+	_tcpPort = _listener.local_endpoint().port();
 	autoBind(TcpPrctl::Type::LOGIN, &Server::loginHandler);
 	autoBind(TcpPrctl::Type::LOGOUT, &Server::logoutHandler);
 	autoBind(TcpPrctl::Type::CREATE_GAMEROOM, &Server::createGameRoomHandler);

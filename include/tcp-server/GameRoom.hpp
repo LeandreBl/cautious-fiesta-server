@@ -21,6 +21,7 @@ class GameRoom {
 
       protected:
 	void scene() noexcept;
+	boost::asio::io_service _service;
 	std::string _name;
 	std::vector<PlayerConnection *> _players;
 	std::unique_ptr<std::thread> _thread;

@@ -43,6 +43,7 @@ class PlayerConnection {
 	int getId() const noexcept;
 	std::string getIp() const noexcept;
 	void close() noexcept;
+	void closeUdp() noexcept;
 	void pushPacket(Serializer &packet, TcpPrctl::Type type) noexcept;
 	void refreshTcp() noexcept;
 	void setUdpPort(uint16_t port) noexcept;
@@ -50,16 +51,10 @@ class PlayerConnection {
 	void setPlayer(const Stats::stats &stats, const sf::Color &color) noexcept;
 	Stats &getPlayer() noexcept;
 
-	udp::endpoint &getUdpRemote() noexcept;
-
-	void pushUdpPacket(Serializer &packet, UdpPrctl::Type type) noexcept;
-	void pushUdpAck(const UdpPrctl &header) noexcept;
-	void refreshUdp(udp::socket &socket) noexcept;
-	void notifyUdpReceive(uint16_t pktIndex) noexcept;
-	auto &getJitterBuffer() noexcept
-	{
-		return _jitterUdpBuffer;
-	}
+	tcp::socket &setSocket(boost::asio::io_service &service) noexcept;
+	tcp::socket &getIngameSocket() noexcept;
+	void pushUdpPacket(const Serializer &packet, UdpPrctl::Type type) noexcept;
+	struct netBuffer &getUdpBuffer() noexcept;
 
       protected:
 	void asyncReadHeader(const boost::system::error_code &error, std::size_t bytes_transferred);
@@ -68,19 +63,18 @@ class PlayerConnection {
 	int writeTcp(const Serializer &serializer) noexcept;
 	void headerMode() noexcept;
 	void packetMode() noexcept;
-	boost::asio::io_service _service;
+	const int _id;
 	TcpPrctl _header;
 	size_t _rd;
 	struct netBuffer _netBuffer;
 	size_t _toRead;
 	std::string _name;
-	udp::endpoint _udpRemote;
+	std::unique_ptr<tcp::socket> _ingameSocket;
+	struct netBuffer _udpBuffer;
 	std::unique_ptr<tcp::socket> _tcpSocket;
 	GameRoom *_room;
-	std::array<int8_t, 1 << 12> _jitterUdpBuffer;
 	std::queue<Serializer> _toWrite;
-	std::queue<UdpPrctl> _ackQueue;
-	std::list<std::pair<UdpPrctl, Serializer>> _toWriteUdp;
+	std::queue<Serializer> _toWriteUdp;
 	uint16_t _udpIndex;
 	Server &_server;
 	Stats _player;

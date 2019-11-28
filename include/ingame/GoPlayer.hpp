@@ -20,6 +20,9 @@ class GoPlayer : public IGoEntity {
 		 const Stats &player) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
+	void updateMovementMatrix(UdpPrctl::inputType key, UdpPrctl::inputAction action) noexcept;
+	void updateUdpPosition() noexcept;
+	void updateUdpVelocity() noexcept;
 	std::string asString() const noexcept;
 	sfs::Velocity &getVelocity() noexcept;
 	void setStaticSpeed() noexcept;
@@ -31,6 +34,7 @@ class GoPlayer : public IGoEntity {
 	Serializer serialize() const noexcept;
 
       private:
+	std::unordered_map<UdpPrctl::inputType, UdpPrctl::inputAction> _keyMap;
 	GameManager &_gameManager;
 	IGoWeapon *_weapon;
 	sfs::Velocity &_velocity;

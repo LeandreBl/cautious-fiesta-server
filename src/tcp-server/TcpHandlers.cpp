@@ -314,11 +314,9 @@ int Server::sendAssetHandler(PlayerConnection &handle, Serializer &s)
 
 int Server::gameStartHandler(PlayerConnection &handle, Serializer &s)
 {
-	uint16_t port;
-
-	s >> port;
-	say(true, "~%s set UDP port to %u\n", handle.name().c_str(), port);
-	handle.getUdpRemote().port(port);
+	(void)handle;
+	(void)s;
+	say(false, "UNHANDLED: Received a TcpPrctl::Type::GAME_START packet\n");
 	return 0;
 }
 

@@ -6,7 +6,8 @@
 
 namespace cf {
 GameRoom::GameRoom(const std::string &name) noexcept
-	: _name(name)
+	: _service()
+	, _name(name)
 	, _players()
 	, _isRunning(false)
 {
@@ -70,8 +71,6 @@ void GameRoom::start(const std::function<void(GameRoom &)> &endCallback) noexcep
 	_endCallback = std::move(endCallback);
 	_thread = std::make_unique<std::thread>(std::bind(&GameRoom::scene, this));
 	_thread->detach();
-	trace(_thread != nullptr, "#%s started with %zu player(s).\n", _name.c_str(),
-	      _players.size());
 }
 
 void GameRoom::stop() noexcept

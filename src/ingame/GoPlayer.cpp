@@ -22,6 +22,12 @@ GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
 	, _hat(addComponent<sfs::Sprite>())
 	, _spriteName("assets/HAT_61x61.png")
 {
+	_keyMap[UdpPrctl::inputType::UP] = UdpPrctl::inputAction::RELEASED;
+	_keyMap[UdpPrctl::inputType::DOWN] = UdpPrctl::inputAction::RELEASED;
+	_keyMap[UdpPrctl::inputType::LEFT] = UdpPrctl::inputAction::RELEASED;
+	_keyMap[UdpPrctl::inputType::RIGHT] = UdpPrctl::inputAction::RELEASED;
+	_keyMap[UdpPrctl::inputType::ATTACK1] = UdpPrctl::inputAction::RELEASED;
+	_keyMap[UdpPrctl::inputType::ATTACK2] = UdpPrctl::inputAction::RELEASED;
 	manager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
 }
 
@@ -41,14 +47,79 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 
 void GoPlayer::update(sfs::Scene &) noexcept
 {
-	if (getPosition() != _prevPosition.getPrevPosition()) {
-		Serializer s;
-		s << getId() << getPosition().x << getPosition().y;
-		_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
-		s.clear();
-		s << getId() << _velocity.speed.x << _velocity.speed.y << _velocity.acceleration.x
-		  << _velocity.acceleration.y;
-		_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
+}
+
+static UdpPrctl::inputType reverseMove(UdpPrctl::inputType key)
+{
+	switch (key) {
+	case UdpPrctl::inputType::UP:
+		return UdpPrctl::inputType::DOWN;
+	case UdpPrctl::inputType::DOWN:
+		return UdpPrctl::inputType::UP;
+	case UdpPrctl::inputType::LEFT:
+		return UdpPrctl::inputType::RIGHT;
+	case UdpPrctl::inputType::RIGHT:
+		return UdpPrctl::inputType::LEFT;
+	default:
+		return UdpPrctl::inputType::UNKNOWN_KEY;
+	}
+}
+
+static void setValue(sf::Vector2f &s, sf::Vector2f &a, UdpPrctl::inputType type, float value)
+{
+	switch (type) {
+	case UdpPrctl::inputType::UP:
+		s.y = -value;
+		a.y = !!value;
+		break;
+	case UdpPrctl::inputType::DOWN:
+		s.y = value;
+		a.y = !!value;
+		break;
+	case UdpPrctl::inputType::LEFT:
+		s.x = -value;
+		a.x = !!value;
+		break;
+	case UdpPrctl::inputType::RIGHT:
+		s.x = value;
+		a.x = !!value;
+		break;
+	}
+}
+
+void GoPlayer::updateMovementMatrix(UdpPrctl::inputType key, UdpPrctl::inputAction action) noexcept
+{
+	sf::Vector2f speed = _velocity.speed;
+	sf::Vector2f acceleration = _velocity.acceleration;
+
+	auto k = _keyMap[key];
+	_keyMap[key] = action;
+	if (k == action)
+		return;
+	k = action;
+	auto keyp = reverseMove(key);
+	auto kp = _keyMap[keyp];
+	const float coef = getSpeed() * 10;
+	if (k == UdpPrctl::inputAction::PRESSED) {
+		if (kp == UdpPrctl::inputAction::PRESSED) {
+			setValue(_velocity.speed, _velocity.acceleration, key, 0);
+		}
+		else if (kp == UdpPrctl::inputAction::RELEASED) {
+			setValue(_velocity.speed, _velocity.acceleration, key, coef);
+		}
+	}
+	else if (k == UdpPrctl::inputAction::RELEASED) {
+		if (kp == UdpPrctl::inputAction::PRESSED) {
+			setValue(_velocity.speed, _velocity.acceleration, keyp, coef);
+		}
+		else if (kp == UdpPrctl::inputAction::RELEASED) {
+			setValue(_velocity.speed, _velocity.acceleration, keyp, 0);
+		}
+	}
+	/* if state changed, update NET */
+	if (speed != _velocity.speed || acceleration != _velocity.acceleration) {
+		updateUdpPosition();
+		updateUdpVelocity();
 	}
 }
 
@@ -60,6 +131,21 @@ std::string GoPlayer::asString() const noexcept
 sfs::Velocity &GoPlayer::getVelocity() noexcept
 {
 	return _velocity;
+}
+
+void GoPlayer::updateUdpPosition() noexcept
+{
+	Serializer s;
+	s << getId() << getPosition().x << getPosition().y;
+	_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
+}
+
+void GoPlayer::updateUdpVelocity() noexcept
+{
+	Serializer s;
+	s << getId() << _velocity.speed.x << _velocity.speed.y << _velocity.acceleration.x
+	  << _velocity.acceleration.y;
+	_gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
 }
 
 void GoPlayer::collide(IGoEntity &entity) noexcept
