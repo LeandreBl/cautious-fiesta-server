@@ -28,7 +28,6 @@ GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
 	_keyMap[UdpPrctl::inputType::RIGHT] = UdpPrctl::inputAction::RELEASED;
 	_keyMap[UdpPrctl::inputType::ATTACK1] = UdpPrctl::inputAction::RELEASED;
 	_keyMap[UdpPrctl::inputType::ATTACK2] = UdpPrctl::inputAction::RELEASED;
-	manager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
 }
 
 void GoPlayer::start(sfs::Scene &scene) noexcept
@@ -43,6 +42,7 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 		_hat.setTexture(*texture, true);
 	}
 	_gameManager.getColliderManager().addToAllies(*this);
+	_gameManager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
 }
 
 void GoPlayer::update(sfs::Scene &) noexcept

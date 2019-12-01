@@ -24,7 +24,7 @@ class GoUdp : public sfs::GameObject {
 	GoPlayer *getPlayerFromConnection(PlayerConnection &connection) const noexcept;
 	void onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
 		      std::size_t bytes_transferred);
-	void executePackets(GoPlayer &player, const UdpPrctl &header, Serializer &s) noexcept;
+	void executePackets(PlayerConnection &connection) noexcept;
 	void asyncReceive(PlayerConnection &connection) noexcept;
 	void pollPackets() noexcept;
 	template <typename... Args> void autoBind(UdpPrctl::Type type, Args... args)

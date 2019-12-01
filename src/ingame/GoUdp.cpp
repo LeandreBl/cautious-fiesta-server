@@ -45,9 +45,20 @@ void GoUdp::onUpdate(PlayerConnection &connection, const boost::system::error_co
 						       bytes_transferred);
 }
 
-void GoUdp::executePackets(GoPlayer &player, const UdpPrctl &header, Serializer &s) noexcept
+void GoUdp::executePackets(PlayerConnection &connection) noexcept
 {
-	_callbacks[static_cast<int>(header.getType())](player, s);
+	auto &s = connection.getUdpBuffer().serializer;
+
+	while (s.getSize() > sizeof(UdpPrctl)) {
+		UdpPrctl header;
+		s >>= header;
+		if (s.getSize() < header.getLength() + sizeof(header))
+			return;
+		s.shift(sizeof(header));
+		auto *go = getPlayerFromConnection(connection);
+		if (go != nullptr)
+			_callbacks[static_cast<int>(header.getType())](*go, s);
+	}
 }
 
 GoPlayer *GoUdp::getPlayerFromConnection(PlayerConnection &connection) const noexcept
@@ -95,17 +106,7 @@ void GoUdp::start(sfs::Scene &scene) noexcept
 void GoUdp::pollPackets() noexcept
 {
 	for (auto &&i : _manager.getConnections()) {
-		auto &s = i->getUdpBuffer().serializer;
-		if (s.getSize() < sizeof(UdpPrctl))
-			return;
-		UdpPrctl header;
-		s >>= header;
-		if (s.getSize() < header.getLength() + sizeof(header))
-			return;
-		s.shift(sizeof(header));
-		auto *go = getPlayerFromConnection(*i);
-		if (go != nullptr)
-			executePackets(*go, header, s);
+		executePackets(*i);
 	}
 }
 
