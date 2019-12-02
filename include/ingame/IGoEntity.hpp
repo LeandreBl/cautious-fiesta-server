@@ -19,6 +19,5 @@ class IGoEntity : public sfs::GameObject, public Stats {
 	virtual sf::FloatRect getHitBox() const noexcept = 0;
 	virtual void collide(IGoEntity &entity) noexcept = 0;
 	virtual sfs::Velocity &getVelocity() noexcept = 0;
-	virtual Serializer serialize() const noexcept = 0;
 };
 } // namespace cf

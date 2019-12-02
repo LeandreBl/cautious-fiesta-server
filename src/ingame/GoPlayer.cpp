@@ -8,7 +8,7 @@
 namespace cf
 {
 
-void GoPlayer::destroy() noexcept
+void GoPlayer::onDestroy() noexcept
 {
 	Serializer s;
 
@@ -176,7 +176,7 @@ void GoPlayer::goToPrevPosition() noexcept
 sf::FloatRect GoPlayer::getHitBox() const noexcept
 {
 	/* TODO with sprite size */
-	return sf::FloatRect(getPosition(), sf::Vector2f(50, 50));
+	return _hat.getGlobalBounds();
 }
 
 IGoWeapon *GoPlayer::getWeapon() noexcept

@@ -14,10 +14,9 @@ namespace cf
 using boost::asio::ip::udp;
 class GameManager;
 
-class GoPlayer : public IGoEntity
-{
-public:
-	void destroy() noexcept;
+class GoPlayer : public IGoEntity {
+      public:
+	void onDestroy() noexcept;
 	GoPlayer(const sf::Vector2f &position, GameManager &manager, const std::string &playerName,
 			 const Stats &player) noexcept;
 	void start(sfs::Scene &scene) noexcept;
