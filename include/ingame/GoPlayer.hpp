@@ -8,16 +8,18 @@
 #include "CpnPrevPosition.hpp"
 #include "Stats.hpp"
 
-namespace cf {
+namespace cf
+{
 
 using boost::asio::ip::udp;
 class GameManager;
 
-class GoPlayer : public IGoEntity {
-      public:
+class GoPlayer : public IGoEntity
+{
+public:
 	void destroy() noexcept;
 	GoPlayer(const sf::Vector2f &position, GameManager &manager, const std::string &playerName,
-		 const Stats &player) noexcept;
+			 const Stats &player) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 	void updateMovementMatrix(UdpPrctl::inputType key, UdpPrctl::inputAction action) noexcept;
@@ -33,7 +35,7 @@ class GoPlayer : public IGoEntity {
 	IGoWeapon *getWeapon() noexcept;
 	Serializer serialize() const noexcept;
 
-      private:
+private:
 	std::unordered_map<UdpPrctl::inputType, UdpPrctl::inputAction> _keyMap;
 	GameManager &_gameManager;
 	IGoWeapon *_weapon;

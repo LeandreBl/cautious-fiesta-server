@@ -9,25 +9,28 @@
 #include "PlayerConnection.hpp"
 #include "GoPlayer.hpp"
 
-namespace cf {
+namespace cf
+{
 
 using boost::asio::ip::udp;
 
-class GoUdp : public sfs::GameObject {
-      public:
-	GoUdp(GameManager &manager, boost::asio::io_service &service) noexcept;
+class GoUdp : public sfs::GameObject
+{
+public:
+	GoUdp(sfs::Scene &scene, GameManager &manager, boost::asio::io_service &service) noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void update(sfs::Scene &scene) noexcept;
 
-      private:
+private:
 	PlayerConnection *getConnectionFromEndpoint(const tcp::endpoint &endpoint) const noexcept;
 	GoPlayer *getPlayerFromConnection(PlayerConnection &connection) const noexcept;
 	void onUpdate(PlayerConnection &connection, const boost::system::error_code &error,
-		      std::size_t bytes_transferred);
+				  std::size_t bytes_transferred);
 	void executePackets(PlayerConnection &connection) noexcept;
 	void asyncReceive(PlayerConnection &connection) noexcept;
 	void pollPackets() noexcept;
-	template <typename... Args> void autoBind(UdpPrctl::Type type, Args... args)
+	template <typename... Args>
+	void autoBind(UdpPrctl::Type type, Args... args)
 	{
 		_callbacks[static_cast<int>(type)] =
 			std::bind(args..., this, std::placeholders::_1, std::placeholders::_2);
@@ -45,6 +48,7 @@ class GoUdp : public sfs::GameObject {
 	int unknownHandler(GoPlayer &player, Serializer &toRead);
 	int ackHandler(GoPlayer &player, Serializer &toRead);
 	/* private data */
+	sfs::Scene &_scene;
 	std::function<int(GoPlayer &, Serializer &toRead)>
 		_callbacks[static_cast<int>(UdpPrctl::Type::ACK) + 1];
 	boost::asio::io_service &_ingameService;

@@ -2,16 +2,17 @@
 
 #include <GameObject.hpp>
 
-namespace cf {
+namespace cf
+{
 class GoPlayer;
-class IGoWeapon : public sfs::GameObject {
-      public:
-	virtual void attack(GoPlayer &player) noexcept = 0;
-	virtual void specialAttack(GoPlayer &player) noexcept = 0;
-	virtual float getAttackCooldown() const noexcept = 0;
-	virtual float getSpecialAttackCooldown() const noexcept = 0;
-	virtual void setCooldownReduction(float percentage) const noexcept = 0;
+class IGoWeapon : public sfs::GameObject
+{
+public:
+	virtual void spawn(GoPlayer &player) noexcept = 0;
+	virtual void attack(sfs::Scene &scene, GoPlayer &player, const sf::Vector2f &target) noexcept = 0;
+	virtual void specialAttack(sfs::Scene &scene, GoPlayer &player, const sf::Vector2f &target) noexcept = 0;
+	virtual void setCooldownReduction(float coeff) noexcept = 0;
 	virtual float getCooldownReduction() const noexcept = 0;
-	virtual void defaultCooldowns() const noexcept = 0;
+	virtual void defaultCooldowns() noexcept = 0;
 };
 } // namespace cf

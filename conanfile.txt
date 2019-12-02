@@ -7,5 +7,3 @@ boost:shared=True
 
 [generators]
 cmake
-
-
