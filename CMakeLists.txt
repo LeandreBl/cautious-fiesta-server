@@ -18,8 +18,8 @@ file(GLOB_RECURSE SRCS "src/*.cpp")
 
 set(HDRS_DIRS "include/common" "include/tcp-server" "include/ingame")
 
-set(CMAKE_CXX_FLAGS_DEBUG "-O3 -g3 -Wall -Wextra -Weffc++ -Wshadow -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wpedantic -Wsign-conversion -Wlogical-op -Wuseless-cast -fsanitize=address")
-set(CMAKE_CXX_FLAGS_RELEASE "-Wall -g3 -Wextra -O3 -fsanitize=address")
+set(CMAKE_CXX_FLAGS_DEBUG "-O3 -ggdb3 -Wall -Wextra -Weffc++ -Wshadow -Wold-style-cast -Wcast-align -Wunused -Woverloaded-virtual -Wpedantic -Wsign-conversion -Wlogical-op -Wuseless-cast -fsanitize=address")
+set(CMAKE_CXX_FLAGS_RELEASE "-Wall -ggdb3 -Wextra -O3 -fsanitize=address")
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 
 conan_basic_setup()

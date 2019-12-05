@@ -1,18 +1,23 @@
 #include "GoBullet.hpp"
+#include "CpnTimer.hpp"
 
 namespace cf {
-GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position,
-		   const sf::Vector2f &vspeed) noexcept
-	: IGoProjectile(manager, position, vspeed, sf::Vector2f(1, 1))
+GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle,
+		   float speed) noexcept
+	: IGoProjectile(manager, position, angle, speed)
+	, _angle(angle)
+	, _speed(speed)
 	, _spriteName("assets/fireball.png")
 	, _sprite(nullptr)
 {
+	addComponent<CpnTimer>(2);
 }
 
 void GoBullet::onDestroy() noexcept
 {
 	Serializer s;
 
+	s << static_cast<int32_t>(UdpPrctl::destroyType::GAMEOBJECT);
 	s << getId();
 	_manager.updateUdp(s, UdpPrctl::Type::DESTROY);
 	_manager.getColliderManager().removeFromAllies(*this);
@@ -33,8 +38,7 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	s << static_cast<int32_t>(UdpPrctl::spawnType::PROJECTILE);
 	s << static_cast<uint64_t>(getId());
 	s << getPosition().x << getPosition().y;
-	s << _velocity.speed.x << _velocity.speed.y;
-	s << _velocity.acceleration.x << _velocity.acceleration.y;
+	s << _angle << _speed;
 	s << sf::Color::White;
 	s << _spriteName;
 	_manager.getColliderManager().addToAllies(*this);

@@ -1,11 +1,12 @@
 #include "IGoProjectile.hpp"
 
 namespace cf {
-IGoProjectile::IGoProjectile(GameManager &manager, const sf::Vector2f &position,
-			     const sf::Vector2f &speed, const sf::Vector2f &acceleration) noexcept
+IGoProjectile::IGoProjectile(GameManager &manager, const sf::Vector2f &position, float angle,
+			     float speed) noexcept
 	: IGoEntity(position, "projectile")
 	, _manager(manager)
-	, _velocity(addComponent<sfs::Velocity>(speed, acceleration))
+	, _velocity(addComponent<sfs::Velocity>(
+		  sf::Vector2f(cosf(angle) * speed, sinf(angle) * speed)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
 {
 }

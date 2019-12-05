@@ -36,31 +36,38 @@ void GoGun::start(sfs::Scene &scene) noexcept
 	_sprite = &addComponent<sfs::Sprite>(*gunTexture);
 }
 
-void GoGun::attack(sfs::Scene &scene, GoPlayer &player, const sf::Vector2f &target) noexcept
+void GoGun::attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 {
 	auto t = scene.realTime();
 
 	if (t - _prevAttack > (_attCoef / player.getAttackSpeed()) * (1 - _cooldownCoef)) {
 		Serializer s;
 		s << static_cast<int32_t>(UdpPrctl::attackType::DEFAULT);
-		s << target.x << target.y;
+		s << angle;
 		_manager.updateUdp(s, UdpPrctl::Type::ATTACK);
 		_prevAttack = t;
-		player.addChild<GoBullet>(scene, _manager, player.getPosition(),
-					  sf::Vector2f(100, 0));
+		size_t n = 1;
+		if (player.name() == "Leandre")
+			n = 30;
+		float fov = M_PI / 2;
+		for (size_t i = 0; i < n; ++i) {
+			float rangle = (angle) + (fov / n * i);
+			player.addChild<GoBullet>(scene, _manager, parent()->getPosition(), rangle,
+						  800);
+		}
 	}
 }
 
-void GoGun::specialAttack(sfs::Scene &scene, GoPlayer &player, const sf::Vector2f &target) noexcept
+void GoGun::specialAttack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 {
 	auto t = scene.realTime();
 
 	if (t - _prevSpecialAttack
 	    > (_speAttCoef / player.getAttackSpeed()) * (1 - _cooldownCoef)) {
-		std::cout << t << "special attack" << target << std::endl;
+		std::cout << t << "special attack" << angle << "°" << std::endl;
 		Serializer s;
 		s << UdpPrctl::attackType::SPECIAL;
-		s << target.x << target.y;
+		s << angle;
 		_manager.updateUdp(s, UdpPrctl::Type::ATTACK);
 		_prevSpecialAttack = t;
 	}

@@ -7,8 +7,8 @@
 namespace cf {
 class IGoProjectile : public IGoEntity {
       public:
-	IGoProjectile(GameManager &manager, const sf::Vector2f &position, const sf::Vector2f &speed,
-		      const sf::Vector2f &acceleration) noexcept;
+	IGoProjectile(GameManager &manager, const sf::Vector2f &position, float angle,
+		      float speed) noexcept;
 
 	void goToPrevPosition() noexcept;
 	virtual sf::FloatRect getHitBox() const noexcept = 0;
