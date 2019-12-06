@@ -6,7 +6,7 @@ then
     cd build
     conan install .. --build=missing
     cmake -DCMAKE_BUILD_TYPE=DEBUG ..
-    cmake --build . -- -j
+    cmake --build . -- -j2
 elif [[ $1 == "rebuild" ]];
 then
     rm -rf build
@@ -22,5 +22,5 @@ else
     cd build
     conan install .. --build=missing
     cmake -DCMAKE_BUILD_TYPE=RELEASE ..
-    cmake --build . -- -j
+    cmake --build . -- -j2
 fi;

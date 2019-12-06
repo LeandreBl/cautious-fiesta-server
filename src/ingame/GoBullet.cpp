@@ -2,13 +2,14 @@
 #include "CpnTimer.hpp"
 
 namespace cf {
-GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle,
-		   float speed) noexcept
+GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle, float speed,
+		   const sf::Color &color) noexcept
 	: IGoProjectile(manager, position, angle, speed)
 	, _angle(angle)
 	, _speed(speed)
 	, _spriteName("assets/fireball.png")
 	, _sprite(nullptr)
+	, _color(color)
 {
 	addComponent<CpnTimer>(2);
 }
@@ -39,7 +40,7 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	s << static_cast<uint64_t>(getId());
 	s << getPosition().x << getPosition().y;
 	s << _angle << _speed;
-	s << sf::Color::White;
+	s << _color;
 	s << _spriteName;
 	_manager.getColliderManager().addToAllies(*this);
 	_manager.updateUdp(s, UdpPrctl::Type::SPAWN);

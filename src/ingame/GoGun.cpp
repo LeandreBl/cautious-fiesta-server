@@ -53,7 +53,7 @@ void GoGun::attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 		for (size_t i = 0; i < n; ++i) {
 			float rangle = (angle) + (fov / n * i);
 			player.addChild<GoBullet>(scene, _manager, parent()->getPosition(), rangle,
-						  800);
+						  800, sf::Color::Green);
 		}
 	}
 }
