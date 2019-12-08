@@ -1,10 +1,11 @@
 #include "GoUdp.hpp"
 #include "GameManager.hpp"
+#include "GoMapGeneration.hpp"
 
 namespace cf
 {
 GameManager::GameManager(GameRoom &room, boost::asio::io_service &localService) noexcept
-	: _service(localService), _players(), _gameRoom(room), _colliderManager(nullptr)
+	: _service(localService), _players(), _gameRoom(room), _colliderManager(nullptr), _map(nullptr)
 {
 }
 
@@ -18,6 +19,7 @@ void GameManager::start(sfs::Scene &scene) noexcept
 	}
 	scene.addGameObject<GoUdp>(scene, *this, _service);
 	_colliderManager = &scene.addGameObject<ColliderManager>();
+	_map = &scene.addGameObject<MapGenerator>(*this);
 }
 
 ColliderManager &GameManager::getColliderManager() noexcept

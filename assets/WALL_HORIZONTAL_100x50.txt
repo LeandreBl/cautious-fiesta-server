@@ -1,0 +1,2 @@
+assets/WALL_HORIZONTAL_100x50.png
+0 0 100 50

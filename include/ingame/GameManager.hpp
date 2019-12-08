@@ -8,6 +8,8 @@
 #include "ColliderManager.hpp"
 
 namespace cf {
+class MapGenerator;
+
 template <typename T> T &operator<<(T &os, const sf::Vector2f &v)
 {
 	os << '(' << v.x << ", " << v.y << ')';
@@ -43,5 +45,6 @@ class GameManager : public sfs::GameObject {
 	std::vector<GoPlayer *> _players;
 	GameRoom &_gameRoom;
 	ColliderManager *_colliderManager;
+	MapGenerator *_map;
 };
 } // namespace cf

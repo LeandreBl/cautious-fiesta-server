@@ -1,0 +1,2 @@
+assets/PUDDLE_50x50.png
+0 0 50 50

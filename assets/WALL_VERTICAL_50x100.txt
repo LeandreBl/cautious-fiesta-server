@@ -1,0 +1,3 @@
+assets/WALL_VERTICAL_50x100.png
+0 0 50 100
+
