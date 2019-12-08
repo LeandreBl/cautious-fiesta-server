@@ -1,5 +1,6 @@
 #include "GoBullet.hpp"
 #include "CpnTimer.hpp"
+#include "SpriteSheetLoader.hpp"
 
 namespace cf {
 GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle, float speed,
@@ -7,8 +8,8 @@ GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float ang
 	: IGoProjectile(manager, position, angle, speed)
 	, _angle(angle)
 	, _speed(speed)
-	, _spriteName("assets/Projectiles.png")
-	, _sprite(nullptr)
+	, _spriteSheet("assets/SpriteSheets/Projectiles.txt")
+	, _sprites(nullptr)
 	, _color(color)
 {
 	addComponent<CpnTimer>(2);
@@ -26,14 +27,15 @@ void GoBullet::onDestroy() noexcept
 
 void GoBullet::start(sfs::Scene &scene) noexcept
 {
-	auto *texture = scene.getAssetTexture(_spriteName);
+	SpriteSheetLoader loader(_spriteSheet);
+	auto *texture = scene.getAssetTexture(loader.getSpritePath());
 
 	if (texture == nullptr) {
-		std::cerr << "Can't load " << _spriteName << std::endl;
+		std::cerr << "Can't load " << _spriteSheet << std::endl;
 		destroy();
 		return;
 	}
-	_sprite = &addComponent<sfs::Sprite>(*texture);
+	_sprites = &addComponent<sfs::MultiSprite>(*texture, loader.getFrames());
 	Serializer s;
 
 	s << static_cast<int32_t>(UdpPrctl::spawnType::PROJECTILE);
@@ -41,7 +43,7 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	s << getPosition().x << getPosition().y;
 	s << _angle << _speed;
 	s << _color;
-	s << _spriteName;
+	s << _spriteSheet;
 	_manager.getColliderManager().addToAllies(*this);
 	_manager.updateUdp(s, UdpPrctl::Type::SPAWN);
 }
@@ -54,6 +56,6 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 
 sf::FloatRect GoBullet::getHitBox() const noexcept
 {
-	return _sprite->getGlobalBounds();
+	return _sprites->getGlobalBounds();
 }
 } // namespace cf

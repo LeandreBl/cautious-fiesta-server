@@ -15,8 +15,8 @@ class GoBullet : public IGoProjectile {
       protected:
 	float _angle;
 	float _speed;
-	std::string _spriteName;
-	sfs::Sprite *_sprite;
+	std::string _spriteSheet;
+	sfs::MultiSprite *_sprites;
 	sf::Color _color;
 };
 } // namespace cf
