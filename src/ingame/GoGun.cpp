@@ -49,11 +49,13 @@ void GoGun::attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 		size_t n = 1;
 		if (player.name() == "Leandre")
 			n = 30;
-		float fov = M_PI / 2;
+		const float fov = M_PI / 4;
+		const float delta = fov / n;
+		const float off = (n % 2 == 0) ? 0 : (fov / 2);
 		for (size_t i = 0; i < n; ++i) {
-			float rangle = (angle) + (fov / n * i);
+			float rangle = angle - (fov / 2) + (delta * i) + off;
 			player.addChild<GoBullet>(scene, _manager, parent()->getPosition(), rangle,
-						  800, sf::Color::Green);
+						  800, sf::Color(0, 255, 0, 200));
 		}
 	}
 }

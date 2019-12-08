@@ -6,7 +6,7 @@ IGoProjectile::IGoProjectile(GameManager &manager, const sf::Vector2f &position,
 	: IGoEntity(position, "projectile")
 	, _manager(manager)
 	, _velocity(addComponent<sfs::Velocity>(
-		  sf::Vector2f(cosf(angle) * speed, sinf(angle) * speed)))
+		  sf::Vector2f(cosf(angle) * -speed, sinf(angle) * -speed)))
 	, _prevPosition(addComponent<CpnPrevPosition>())
 {
 }
