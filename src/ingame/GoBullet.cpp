@@ -7,7 +7,7 @@ GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float ang
 	: IGoProjectile(manager, position, angle, speed)
 	, _angle(angle)
 	, _speed(speed)
-	, _spriteName("assets/fireball.png")
+	, _spriteName("assets/Projectiles.png")
 	, _sprite(nullptr)
 	, _color(color)
 {
