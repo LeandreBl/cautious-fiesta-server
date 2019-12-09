@@ -2,10 +2,12 @@
 
 #include <GameObject.hpp>
 
-namespace cf {
+namespace cf
+{
 class GoPlayer;
-class IGoWeapon : public sfs::GameObject {
-      public:
+class IGoWeapon : public sfs::GameObject
+{
+public:
 	virtual void spawn(GoPlayer &player) noexcept = 0;
 	virtual void attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept = 0;
 	virtual void specialAttack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept = 0;

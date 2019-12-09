@@ -5,7 +5,8 @@
 #include "GoSword.hpp"
 #include "GoGun.hpp"
 
-namespace cf {
+namespace cf
+{
 
 void GoPlayer::onDestroy() noexcept
 {
@@ -17,14 +18,10 @@ void GoPlayer::onDestroy() noexcept
 }
 
 GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
-		   const std::string &playerName, const Stats &player) noexcept
-	: IGoEntity(position, playerName, player)
-	, _gameManager(manager)
-	, _weapon(nullptr) /* TODO start with a weapon */
-	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0)))
-	, _prevPosition(addComponent<CpnPrevPosition>())
-	, _hat(addComponent<sfs::Sprite>())
-	, _spriteName("assets/HAT_61x61.png")
+				   const std::string &playerName, const Stats &player) noexcept
+	: IGoEntity(position, playerName, player), _gameManager(manager), _weapon(nullptr) /* TODO start with a weapon */
+	  ,
+	  _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))), _prevPosition(addComponent<CpnPrevPosition>()), _hat(addComponent<sfs::Sprite>()), _spriteName("assets/HAT_61x61.png")
 
 {
 	_keyMap[UdpPrctl::inputType::UP] = UdpPrctl::inputAction::RELEASED;
@@ -38,12 +35,14 @@ GoPlayer::GoPlayer(const sf::Vector2f &position, GameManager &manager,
 void GoPlayer::start(sfs::Scene &scene) noexcept
 {
 	auto *texture = scene.getAssetTexture(_spriteName);
-	if (texture == nullptr) {
+	if (texture == nullptr)
+	{
 		std::cerr << "Unable to find " << _spriteName << " asset"
-			  << "\r";
+				  << "\r";
 		std::cerr.flush();
 	}
-	else {
+	else
+	{
 		_hat.setTexture(*texture, true);
 	}
 	_gameManager.getColliderManager().addToAllies(*this);
@@ -62,7 +61,8 @@ void GoPlayer::update(sfs::Scene &) noexcept
 
 static UdpPrctl::inputType reverseMove(UdpPrctl::inputType key)
 {
-	switch (key) {
+	switch (key)
+	{
 	case UdpPrctl::inputType::UP:
 		return UdpPrctl::inputType::DOWN;
 	case UdpPrctl::inputType::DOWN:
@@ -78,7 +78,8 @@ static UdpPrctl::inputType reverseMove(UdpPrctl::inputType key)
 
 static void setValue(sf::Vector2f &s, sf::Vector2f &a, UdpPrctl::inputType type, float value)
 {
-	switch (type) {
+	switch (type)
+	{
 	case UdpPrctl::inputType::UP:
 		s.y = -value;
 		a.y = !!value;
@@ -111,24 +112,31 @@ void GoPlayer::updateMovementMatrix(UdpPrctl::inputType key, UdpPrctl::inputActi
 	auto keyp = reverseMove(key);
 	auto kp = _keyMap[keyp];
 	const float coef = getSpeed() * 10;
-	if (k == UdpPrctl::inputAction::PRESSED) {
-		if (kp == UdpPrctl::inputAction::PRESSED) {
+	if (k == UdpPrctl::inputAction::PRESSED)
+	{
+		if (kp == UdpPrctl::inputAction::PRESSED)
+		{
 			setValue(_velocity.speed, _velocity.acceleration, key, 0);
 		}
-		else if (kp == UdpPrctl::inputAction::RELEASED) {
+		else if (kp == UdpPrctl::inputAction::RELEASED)
+		{
 			setValue(_velocity.speed, _velocity.acceleration, key, coef);
 		}
 	}
-	else if (k == UdpPrctl::inputAction::RELEASED) {
-		if (kp == UdpPrctl::inputAction::PRESSED) {
+	else if (k == UdpPrctl::inputAction::RELEASED)
+	{
+		if (kp == UdpPrctl::inputAction::PRESSED)
+		{
 			setValue(_velocity.speed, _velocity.acceleration, keyp, coef);
 		}
-		else if (kp == UdpPrctl::inputAction::RELEASED) {
+		else if (kp == UdpPrctl::inputAction::RELEASED)
+		{
 			setValue(_velocity.speed, _velocity.acceleration, keyp, 0);
 		}
 	}
 	/* if state changed, update NET */
-	if (speed != _velocity.speed || acceleration != _velocity.acceleration) {
+	if (speed != _velocity.speed || acceleration != _velocity.acceleration)
+	{
 		updateUdpPosition();
 		updateUdpVelocity();
 	}
