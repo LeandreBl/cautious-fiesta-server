@@ -10,6 +10,7 @@ void GoEnnemy::onDestroy() noexcept
     Serializer s;
 
     s << getId();
+    std::cout << "Ennemy destroyed id : " << getId() << std::endl;
     _gameManager.updateUdp(s, UdpPrctl::Type::DESTROY);
     _gameManager.getColliderManager().removeFromEnnemies(*this);
 }
@@ -37,6 +38,7 @@ void GoEnnemy::start(sfs::Scene &scene) noexcept
         return;
     }
     _ennemySprite = &addComponent<sfs::MultiSprite>(*texture, v);
+    std::cout << " Start ennemy ID : " << getId() << std::endl;
     s << static_cast<int32_t>(UdpPrctl::spawnType::ENNEMY) << getId() << getName()
       << _spriteSheet;
     _gameManager.getColliderManager().addToEnnemies(*this);
@@ -91,8 +93,7 @@ sfs::Velocity &GoEnnemy::getVelocity() noexcept
 sf::FloatRect GoEnnemy::getHitBox() const noexcept
 {
     /* TODO with sprite size */
-    return sf::FloatRect(0, 0, 0, 0);
-    //return _ennemySprite->getGlobalBounds();
+    return _ennemySprite->getGlobalBounds();
 }
 
 } // namespace cf

@@ -1,11 +1,12 @@
 #pragma once
 
 #include <GameObject.hpp>
+#include <Stats.hpp>
 
 namespace cf
 {
 class GoPlayer;
-class IGoWeapon : public sfs::GameObject
+class IGoWeapon : public sfs::GameObject, public Stats
 {
 public:
 	virtual void spawn(GoPlayer &player) noexcept = 0;

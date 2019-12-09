@@ -16,7 +16,7 @@ void GameManager::start(sfs::Scene &scene) noexcept
 	ennemyStats.setArmor(20);
 	ennemyStats.setAttack(20);
 	ennemyStats.setAttackSpeed(1);
-	ennemyStats.setLife(20);
+	ennemyStats.setLife(50);
 	ennemyStats.setSpeed(20);
 	for (auto &&i : _gameRoom.getPlayers())
 	{

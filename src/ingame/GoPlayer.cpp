@@ -52,6 +52,7 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 	s << getPosition().x << getPosition().y;
 	_gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
 	_weapon = static_cast<IGoWeapon *>(&addChild<GoGun>(scene, _gameManager));
+	_weapon->levelUp(_stats);
 	_weapon->spawn(*this);
 }
 

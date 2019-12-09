@@ -2,15 +2,11 @@
 #include "CpnTimer.hpp"
 #include "SpriteSheetLoader.hpp"
 
-namespace cf {
+namespace cf
+{
 GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle, float speed,
-		   const sf::Color &color) noexcept
-	: IGoProjectile(manager, position, angle, speed)
-	, _angle(angle)
-	, _speed(speed)
-	, _spriteSheet("assets/SpriteSheets/Projectiles.txt")
-	, _sprites(nullptr)
-	, _color(color)
+				   const sf::Color &color) noexcept
+	: IGoProjectile(manager, position, angle, speed), _angle(angle), _speed(speed), _spriteSheet("assets/SpriteSheets/Projectiles.txt"), _sprites(nullptr), _color(color)
 {
 	addComponent<CpnTimer>(2);
 }
@@ -30,7 +26,8 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	SpriteSheetLoader loader(_spriteSheet);
 	auto *texture = scene.getAssetTexture(loader.getSpritePath());
 
-	if (texture == nullptr) {
+	if (texture == nullptr)
+	{
 		std::cerr << "Can't load " << _spriteSheet << std::endl;
 		destroy();
 		return;
@@ -51,7 +48,12 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 void GoBullet::collide(IGoEntity &entity) noexcept
 {
 	entity.inflictDamage(getAttack());
-	// destroy();
+	if (entity.getLife() <= 0)
+	{
+		std::cout << "Ennemy detruit" << std::endl;
+		entity.destroy();
+	}
+	destroy();
 }
 
 void GoBullet::collide(IGoObstacle &obstacle) noexcept
