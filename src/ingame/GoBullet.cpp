@@ -51,7 +51,7 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 void GoBullet::collide(IGoEntity &entity) noexcept
 {
 	entity.inflictDamage(getAttack());
-	destroy();
+	// destroy();
 }
 
 void GoBullet::collide(IGoObstacle &obstacle) noexcept
@@ -61,6 +61,9 @@ void GoBullet::collide(IGoObstacle &obstacle) noexcept
 
 sf::FloatRect GoBullet::getHitBox() const noexcept
 {
-	return _sprites->getGlobalBounds();
+	auto rect = _sprites->getGlobalBounds();
+	rect.left = getPosition().x;
+	rect.top = getPosition().y;
+	return rect;
 }
 } // namespace cf

@@ -48,6 +48,10 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 	}
 	_gameManager.getColliderManager().addToAllies(*this);
 	_gameManager.updateUdp(serialize(), cf::UdpPrctl::Type::SPAWN);
+	Serializer s;
+	s << getId();
+	s << getPosition().x << getPosition().y;
+	_gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
 	_weapon = static_cast<IGoWeapon *>(&addChild<GoGun>(scene, _gameManager));
 	_weapon->spawn(*this);
 }
@@ -162,7 +166,11 @@ void GoPlayer::collide(IGoEntity &entity) noexcept
 
 void GoPlayer::collide(IGoObstacle &obstacle) noexcept
 {
-	/* TODO */
+	Serializer s;
+
+	s << getId();
+	s << getPosition().x << getPosition().y;
+	_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 }
 
 void GoPlayer::goToPrevPosition() noexcept
