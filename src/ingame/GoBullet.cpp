@@ -54,6 +54,11 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 	destroy();
 }
 
+void GoBullet::collide(IGoObstacle &obstacle) noexcept
+{
+	destroy();
+}
+
 sf::FloatRect GoBullet::getHitBox() const noexcept
 {
 	return _sprites->getGlobalBounds();

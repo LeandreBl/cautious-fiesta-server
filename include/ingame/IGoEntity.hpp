@@ -7,6 +7,7 @@
 #include "Stats.hpp"
 
 namespace cf {
+class IGoObstacle;
 class IGoEntity : public sfs::GameObject, public Stats {
       public:
 	IGoEntity(const sf::Vector2f &position = sf::Vector2f(0, 0), const std::string &name = "",
@@ -18,6 +19,7 @@ class IGoEntity : public sfs::GameObject, public Stats {
 	virtual void goToPrevPosition() noexcept = 0;
 	virtual sf::FloatRect getHitBox() const noexcept = 0;
 	virtual void collide(IGoEntity &entity) noexcept = 0;
+	virtual void collide(IGoObstacle &obstacle) noexcept = 0;
 	virtual sfs::Velocity &getVelocity() noexcept = 0;
 };
 } // namespace cf

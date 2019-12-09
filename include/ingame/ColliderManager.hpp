@@ -1,11 +1,19 @@
 #pragma once
 
+#include <queue>
+#include <vector>
+
 #include <GameObject.hpp>
 
 #include "IGoEntity.hpp"
 #include "IGoObstacle.hpp"
 
 namespace cf {
+template <typename T> struct container {
+	std::queue<T *> toAdd;
+	std::vector<T *> container;
+	std::queue<T *> toRemove;
+};
 class ColliderManager : public sfs::GameObject {
       public:
 	void removeFromAllies(IGoObstacle &obstacle) noexcept;
@@ -16,12 +24,16 @@ class ColliderManager : public sfs::GameObject {
 	void addToAllies(IGoEntity &entity) noexcept;
 	void addToEnnemies(IGoObstacle &obstacle) noexcept;
 	void addToEnnemies(IGoEntity &entity) noexcept;
+
+	void updateToDelete() noexcept;
+	void updateToAdd() noexcept;
+
 	void update(sfs::Scene &scene) noexcept;
 
       private:
-	std::vector<IGoEntity *> _ennemyEntities;
-	std::vector<IGoEntity *> _allyEntities;
-	std::vector<IGoObstacle *> _ennemyObstacles;
-	std::vector<IGoObstacle *> _allyObstacles;
+	struct container<IGoEntity> _ennemyEntities;
+	struct container<IGoEntity> _allyEntities;
+	struct container<IGoObstacle> _ennemyObstacles;
+	struct container<IGoObstacle> _allyObstacles;
 };
 } // namespace cf

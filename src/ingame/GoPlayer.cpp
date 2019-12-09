@@ -160,6 +160,11 @@ void GoPlayer::collide(IGoEntity &entity) noexcept
 	/* TODO */
 }
 
+void GoPlayer::collide(IGoObstacle &obstacle) noexcept
+{
+	/* TODO */
+}
+
 void GoPlayer::goToPrevPosition() noexcept
 {
 	setPosition(_prevPosition.getPrevPosition());

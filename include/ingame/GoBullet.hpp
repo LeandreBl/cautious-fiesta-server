@@ -10,6 +10,7 @@ class GoBullet : public IGoProjectile {
 	void onDestroy() noexcept;
 	void start(sfs::Scene &scene) noexcept;
 	void collide(IGoEntity &entity) noexcept;
+	void collide(IGoObstacle &obstacle) noexcept;
 	sf::FloatRect getHitBox() const noexcept;
 
       protected:

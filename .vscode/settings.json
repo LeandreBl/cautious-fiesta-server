@@ -66,6 +66,7 @@
 		"filesystem": "cpp",
 		"bit": "cpp",
 		"*.ipp": "cpp",
-		"shared_mutex": "cpp"
+		"shared_mutex": "cpp",
+		"queue": "cpp"
 	}
 }
