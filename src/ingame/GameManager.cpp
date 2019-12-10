@@ -5,10 +5,13 @@
 #include "GoBoss.hpp"
 #include "Vector.hpp"
 
-namespace cf
-{
+namespace cf {
 GameManager::GameManager(GameRoom &room, boost::asio::io_service &localService) noexcept
-	: _service(localService), _players(), _gameRoom(room), _colliderManager(nullptr), _map(nullptr)
+	: _service(localService)
+	, _players()
+	, _gameRoom(room)
+	, _colliderManager(nullptr)
+	, _map(nullptr)
 {
 }
 
@@ -26,18 +29,19 @@ void GameManager::start(sfs::Scene &scene) noexcept
 	bossStats.setAttackSpeed(2);
 	bossStats.setLife(200);
 	bossStats.setSpeed(20);
-	for (auto &&i : _gameRoom.getPlayers())
-	{
+	for (auto &&i : _gameRoom.getPlayers()) {
 		auto &p = scene.addGameObject<GoPlayer>(sf::Vector2f(1920 / 2, 1080 / 2), *this,
-												i->name(), i->getPlayer());
+							i->name(), i->getPlayer());
 		_players.push_back(&p);
 	}
 	scene.addGameObject<GoUdp>(scene, *this, _service);
 	_colliderManager = &scene.addGameObject<ColliderManager>();
 	_map = &scene.addGameObject<MapGenerator>(*this);
-	scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 4, 1080 / 4), *this, "NoeuNoeil", ennemyStats);
-	//scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 1.5, 1080 / 1.5), *this, "NoeilNoeil", ennemyStats);
-	//scene.addGameObject<GoBoss>(sf::Vector2f(1920 / 5, 1080 / 5), *this, "Cervelas", bossStats);
+	scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 4, 1080 / 4), *this, "NoeuNoeil",
+				      ennemyStats);
+	// scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 1.5, 1080 / 1.5), *this, "NoeilNoeil",
+	// ennemyStats); scene.addGameObject<GoBoss>(sf::Vector2f(1920 / 5, 1080 / 5), *this,
+	// "Cervelas", bossStats);
 }
 
 ColliderManager &GameManager::getColliderManager() noexcept
@@ -55,10 +59,19 @@ const std::vector<PlayerConnection *> &GameManager::getConnections() noexcept
 	return _gameRoom.getPlayers();
 }
 
+void GameManager::playerDeath(GoPlayer &player) noexcept
+{
+	for (size_t i = 0; i < _players.size(); ++i) {
+		if (_players[i] == &player) {
+			_players[i] = nullptr;
+			return;
+		}
+	}
+}
+
 void GameManager::updateUdp(const Serializer &s, UdpPrctl::Type type) noexcept
 {
-	for (auto &&c : getConnections())
-	{
+	for (auto &&c : getConnections()) {
 		c->pushUdpPacket(s, type);
 	}
 }
@@ -78,11 +91,9 @@ const GoPlayer *GameManager::getNearestPlayer(const sf::Vector2f &pos) noexcept
 
 	float nearestDistancePlayer = sfs::distance(v[0]->getPosition(), pos);
 	auto *p = v[0];
-	for (auto &&i : v)
-	{
+	for (auto &&i : v) {
 		float newDistance = sfs::distance(i->getPosition(), pos);
-		if (newDistance < nearestDistancePlayer)
-		{
+		if (newDistance < nearestDistancePlayer) {
 			p = i;
 			nearestDistancePlayer = newDistance;
 		}
