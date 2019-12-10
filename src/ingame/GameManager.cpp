@@ -2,6 +2,7 @@
 #include "GameManager.hpp"
 #include "GoMapGeneration.hpp"
 #include "GoEnnemy.hpp"
+#include "GoBoss.hpp"
 #include "Vector.hpp"
 
 namespace cf
@@ -14,11 +15,17 @@ GameManager::GameManager(GameRoom &room, boost::asio::io_service &localService) 
 void GameManager::start(sfs::Scene &scene) noexcept
 {
 	struct Stats ennemyStats;
+	struct Stats bossStats;
 	ennemyStats.setArmor(20);
-	ennemyStats.setAttack(20);
+	ennemyStats.setAttack(5);
 	ennemyStats.setAttackSpeed(1);
 	ennemyStats.setLife(50);
 	ennemyStats.setSpeed(20);
+	bossStats.setArmor(50);
+	bossStats.setAttack(20);
+	bossStats.setAttackSpeed(2);
+	bossStats.setLife(200);
+	bossStats.setSpeed(20);
 	for (auto &&i : _gameRoom.getPlayers())
 	{
 		auto &p = scene.addGameObject<GoPlayer>(sf::Vector2f(1920 / 2, 1080 / 2), *this,
@@ -29,6 +36,8 @@ void GameManager::start(sfs::Scene &scene) noexcept
 	_colliderManager = &scene.addGameObject<ColliderManager>();
 	_map = &scene.addGameObject<MapGenerator>(*this);
 	scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 4, 1080 / 4), *this, "NoeuNoeil", ennemyStats);
+	//scene.addGameObject<GoEnnemy>(sf::Vector2f(1920 / 1.5, 1080 / 1.5), *this, "NoeilNoeil", ennemyStats);
+	//scene.addGameObject<GoBoss>(sf::Vector2f(1920 / 5, 1080 / 5), *this, "Cervelas", bossStats);
 }
 
 ColliderManager &GameManager::getColliderManager() noexcept

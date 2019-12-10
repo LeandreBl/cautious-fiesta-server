@@ -1,4 +1,4 @@
-#include "GoEnnemy.hpp"
+#include "GoBoss.hpp"
 #include "GameManager.hpp"
 #include "SpriteSheetLoader.hpp"
 #include "GoBullet.hpp"
@@ -7,7 +7,7 @@
 namespace cf
 {
 
-void GoEnnemy::onDestroy() noexcept
+void GoBoss::onDestroy() noexcept
 {
     Serializer s;
 
@@ -17,14 +17,14 @@ void GoEnnemy::onDestroy() noexcept
     _gameManager.getColliderManager().removeFromEnnemies(*this);
 }
 
-GoEnnemy::GoEnnemy(const sf::Vector2f &position, GameManager &manager, const std::string &ennemyName,
-                   const Stats &ennemy) noexcept
-    : IGoEntity(position, ennemyName, ennemy), _gameManager(manager), _ennemySprite(nullptr), _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))), _prevAttack(0)
+GoBoss::GoBoss(const sf::Vector2f &position, GameManager &manager, const std::string &bossName,
+               const Stats &boss) noexcept
+    : IGoEntity(position, bossName, boss), _gameManager(manager), _bossSprite(nullptr), _spriteSheet("assets/BOSS_100x100_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))), _prevAttack(0)
 
 {
 }
 
-void GoEnnemy::start(sfs::Scene &scene) noexcept
+void GoBoss::start(sfs::Scene &scene) noexcept
 {
 
     SpriteSheetLoader loader(_spriteSheet);
@@ -39,7 +39,7 @@ void GoEnnemy::start(sfs::Scene &scene) noexcept
         destroy();
         return;
     }
-    _ennemySprite = &addComponent<sfs::MultiSprite>(*texture, v);
+    _bossSprite = &addComponent<sfs::MultiSprite>(*texture, v);
     s << static_cast<int32_t>(UdpPrctl::spawnType::ENNEMY) << getId() << getName()
       << _spriteSheet;
     _gameManager.getColliderManager().addToEnnemies(*this);
@@ -50,7 +50,7 @@ void GoEnnemy::start(sfs::Scene &scene) noexcept
     _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
 }
 
-void GoEnnemy::update(sfs::Scene &scene) noexcept
+void GoBoss::update(sfs::Scene &scene) noexcept
 {
     auto t = scene.realTime();
     auto pos1 = getPosition();
@@ -61,11 +61,10 @@ void GoEnnemy::update(sfs::Scene &scene) noexcept
     float angle = sfs::angle(pos1, pos2) + M_PI;
     Serializer s;
 
-    _velocity.speed.x = 20;
     s << getId();
     s << getPosition().x << getPosition().y;
     _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
-    if (t - _prevAttack > 1)
+    if (t - _prevAttack > 0.5)
     {
         _prevAttack = t;
         size_t n = 1;
@@ -76,24 +75,24 @@ void GoEnnemy::update(sfs::Scene &scene) noexcept
         {
             float rangle = angle - (fov / 2) + (delta * i) + off;
             auto &b = addChild<GoBullet>(scene, _gameManager, getPosition(), rangle,
-                                         rand() % 400 + 400, sf::Color(255, 0, 0, 200));
+                                         800, sf::Color(255, 0, 0, 200));
             b.setAttack(getAttack());
             _gameManager.getColliderManager().addToEnnemies(b);
         }
     }
 }
 
-std::string GoEnnemy::asString() const noexcept
+std::string GoBoss::asString() const noexcept
 {
     return GameObject::asString() + " " + Stats::asString();
 }
 
-void GoEnnemy::collide(IGoEntity &entity) noexcept
+void GoBoss::collide(IGoEntity &entity) noexcept
 {
     entity.inflictDamage(getAttack());
 }
 
-void GoEnnemy::collide(IGoObstacle &obstacle) noexcept
+void GoBoss::collide(IGoObstacle &obstacle) noexcept
 {
     Serializer s;
 
@@ -102,12 +101,12 @@ void GoEnnemy::collide(IGoObstacle &obstacle) noexcept
     _gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 }
 
-void GoEnnemy::goToPrevPosition() noexcept
+void GoBoss::goToPrevPosition() noexcept
 {
     setPosition(_prevPosition.getPrevPosition());
 }
 
-void GoEnnemy::updateUdpVelocity() noexcept
+void GoBoss::updateUdpVelocity() noexcept
 {
     Serializer s;
     s << getId() << _velocity.speed.x << _velocity.speed.y << _velocity.acceleration.x
@@ -115,15 +114,15 @@ void GoEnnemy::updateUdpVelocity() noexcept
     _gameManager.updateUdp(s, UdpPrctl::Type::VELOCITY);
 }
 
-sfs::Velocity &GoEnnemy::getVelocity() noexcept
+sfs::Velocity &GoBoss::getVelocity() noexcept
 {
     return _velocity;
 }
 
-sf::FloatRect GoEnnemy::getHitBox() const noexcept
+sf::FloatRect GoBoss::getHitBox() const noexcept
 {
     /* TODO with sprite size */
-    return _ennemySprite->getGlobalBounds();
+    return _bossSprite->getGlobalBounds();
 }
 
 } // namespace cf
