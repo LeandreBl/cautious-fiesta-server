@@ -61,7 +61,6 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 
 void GoPlayer::update(sfs::Scene &) noexcept
 {
-	
 }
 
 static UdpPrctl::inputType reverseMove(UdpPrctl::inputType key)
@@ -192,7 +191,7 @@ void GoPlayer::confirmKill(EntityType type) noexcept
 		stats newStats;
 		newStats.life = 0;
 		newStats.attack = 1;
-		newStats.attackSpeed = 1/20;
+		newStats.attackSpeed = 1 / 20;
 		newStats.speed = 1;
 		newStats.armor = 1;
 		levelUp(newStats);

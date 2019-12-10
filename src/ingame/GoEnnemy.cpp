@@ -24,7 +24,8 @@ GoEnnemy::GoEnnemy(const sf::Vector2f &position, GameManager &manager,
 	, _ennemySprite(nullptr)
 	, _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt")
 	, _prevPosition(addComponent<CpnPrevPosition>())
-	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(40, 0), sf::Vector2f(0, 0)))
+	, _velocity(addComponent<sfs::Velocity>(sf::Vector2f(40 + rand() % 60, 40 + rand() % 60),
+						sf::Vector2f(1, 1)))
 	, _prevAttack(0)
 
 {
@@ -74,7 +75,7 @@ void GoEnnemy::update(sfs::Scene &scene) noexcept
 		for (size_t i = 0; i < n; ++i) {
 			float rangle = angle - (fov / 2) + (delta * i) + off;
 			auto &b = addChild<GoBullet>(scene, _gameManager, getPosition(), rangle,
-						     rand() % 400 + 400, sf::Color(255, 0, 0, 200));
+						     200 + rand() % 300, sf::Color(255, 0, 0, 200));
 			b.setAttack(getAttack());
 			_gameManager.getColliderManager().addToEnnemies(b);
 		}
