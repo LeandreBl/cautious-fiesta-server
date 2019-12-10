@@ -62,7 +62,7 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 	if (entity.getLife() <= 1) {
 		if (entity.getEntityType() == EntityType::ENNEMY) {
 			auto player = static_cast<IGoEntity *>(this->parent());
-			if (player->getEntityType() == EntityType::PLAYER) {
+			if (player != nullptr && player->getEntityType() == EntityType::PLAYER) {
 				static_cast<GoPlayer *>(player)->confirmKill(
 					entity.getEntityType());
 			}
