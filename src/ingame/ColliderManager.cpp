@@ -1,11 +1,15 @@
 #include "ColliderManager.hpp"
 
-namespace cf {
-
-template <typename T> static void removeIn(std::vector<T *> &v, T *o)
+namespace cf
 {
-	for (auto it = v.begin(); it != v.end(); ++it) {
-		if ((*it) == o) {
+
+template <typename T>
+static void removeIn(std::vector<T *> &v, T *o)
+{
+	for (auto it = v.begin(); it != v.end(); ++it)
+	{
+		if ((*it) == o)
+		{
 			v.erase(it);
 			return;
 		}
@@ -52,18 +56,22 @@ void ColliderManager::addToEnnemies(IGoEntity &entity) noexcept
 	_ennemyEntities.toAdd.push(&entity);
 }
 
-template <typename T> static void addV(struct container<T> &container) noexcept
+template <typename T>
+static void addV(struct container<T> &container) noexcept
 {
-	while (!container.toAdd.empty()) {
+	while (!container.toAdd.empty())
+	{
 		auto &go = container.toAdd.front();
 		container.container.push_back(go);
 		container.toAdd.pop();
 	}
 }
 
-template <typename T> static void removeV(struct container<T> &container) noexcept
+template <typename T>
+static void removeV(struct container<T> &container) noexcept
 {
-	while (!container.toRemove.empty()) {
+	while (!container.toRemove.empty())
+	{
 		auto &go = container.toRemove.front();
 		removeIn<T>(container.container, go);
 		container.toRemove.pop();
@@ -90,14 +98,18 @@ void ColliderManager::update(sfs::Scene &) noexcept
 {
 	updateToDelete();
 	updateToAdd();
-	for (auto &&e : _allyEntities.container) {
+	for (auto &&e : _allyEntities.container)
+	{
 		for (auto &&o : _ennemyObstacles.container)
-			if (o->collide(*e) == true) {
+			if (o->collide(*e) == true)
+			{
 				e->goToPrevPosition();
 				e->collide(*o);
 			}
-		for (auto &&eo : _ennemyEntities.container) {
-			if (e->getHitBox().intersects(eo->getHitBox())) {
+		for (auto &&eo : _ennemyEntities.container)
+		{
+			if (e->getHitBox().intersects(eo->getHitBox()))
+			{
 				e->collide(*eo);
 				eo->collide(*e);
 			}
@@ -105,7 +117,8 @@ void ColliderManager::update(sfs::Scene &) noexcept
 	}
 	for (auto &&e : _ennemyEntities.container)
 		for (auto &&o : _allyObstacles.container)
-			if (o->collide(*e) == true) {
+			if (o->collide(*e) == true)
+			{
 				e->goToPrevPosition();
 				e->collide(*o);
 			}

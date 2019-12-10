@@ -2,6 +2,7 @@
 #include "GameManager.hpp"
 #include "GoMapGeneration.hpp"
 #include "GoEnnemy.hpp"
+#include "Vector.hpp"
 
 namespace cf
 {
@@ -56,6 +57,28 @@ void GameManager::updateUdp(const Serializer &s, UdpPrctl::Type type) noexcept
 const std::string &GameManager::getName() const noexcept
 {
 	return _gameRoom.getName();
+}
+
+const GoPlayer *GameManager::getNearestPlayer(const sf::Vector2f &pos) noexcept
+{
+	auto &v = getGoPlayers();
+	if (v.empty())
+		return nullptr;
+	if (v.size() == 1)
+		return (v[0]);
+
+	float nearestDistancePlayer = sfs::distance(v[0]->getPosition(), pos);
+	auto *p = v[0];
+	for (auto &&i : v)
+	{
+		float newDistance = sfs::distance(i->getPosition(), pos);
+		if (newDistance < nearestDistancePlayer)
+		{
+			p = i;
+			nearestDistancePlayer = newDistance;
+		}
+	}
+	return p;
 }
 
 } // namespace cf

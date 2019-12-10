@@ -61,6 +61,7 @@ void GoGun::attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 			auto &b = player.addChild<GoBullet>(scene, _manager, parent()->getPosition(), rangle,
 												800, sf::Color(0, 255, 0, 200));
 			b.setAttack(getAttack());
+			_manager.getColliderManager().addToAllies(b);
 		}
 	}
 }

@@ -1,6 +1,8 @@
 #include "GoEnnemy.hpp"
 #include "GameManager.hpp"
 #include "SpriteSheetLoader.hpp"
+#include "GoBullet.hpp"
+#include "Vector.hpp"
 
 namespace cf
 {
@@ -17,7 +19,7 @@ void GoEnnemy::onDestroy() noexcept
 
 GoEnnemy::GoEnnemy(const sf::Vector2f &position, GameManager &manager, const std::string &ennemyName,
                    const Stats &ennemy) noexcept
-    : IGoEntity(position, ennemyName, ennemy), _gameManager(manager), _ennemySprite(nullptr), _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0)))
+    : IGoEntity(position, ennemyName, ennemy), _gameManager(manager), _ennemySprite(nullptr), _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))), _prevAttack(0)
 
 {
 }
@@ -48,8 +50,37 @@ void GoEnnemy::start(sfs::Scene &scene) noexcept
     _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
 }
 
-void GoEnnemy::update(sfs::Scene &) noexcept
+void GoEnnemy::update(sfs::Scene &scene) noexcept
 {
+    auto t = scene.realTime();
+    auto pos1 = getPosition();
+    auto *player = _gameManager.getNearestPlayer(pos1);
+    if (player == nullptr)
+        return;
+    auto pos2 = player->getPosition();
+    float angle = sfs::angle(pos1, pos2) + M_PI;
+    Serializer s;
+
+    _velocity.speed.x = 20;
+    s << getId();
+    s << getPosition().x << getPosition().y;
+    _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
+    if (t - _prevAttack > 1)
+    {
+        _prevAttack = t;
+        size_t n = 1;
+        float fov = M_PI / 4;
+        const float delta = fov / n;
+        const float off = (n % 2 == 0) ? 0 : (fov / 2);
+        for (size_t i = 0; i < n; ++i)
+        {
+            float rangle = angle - (fov / 2) + (delta * i) + off;
+            auto &b = addChild<GoBullet>(scene, _gameManager, getPosition(), rangle,
+                                         800, sf::Color(255, 0, 0, 200));
+            b.setAttack(getAttack());
+            _gameManager.getColliderManager().addToEnnemies(b);
+        }
+    }
 }
 
 std::string GoEnnemy::asString() const noexcept

@@ -21,6 +21,7 @@ public:
              const Stats &ennemy) noexcept;
     void start(sfs::Scene &scene) noexcept;
     void update(sfs::Scene &scene) noexcept;
+    void attack(sfs::Scene &scene) noexcept;
     std::string asString() const noexcept;
     void collide(IGoEntity &entity) noexcept;
     void collide(IGoObstacle &obstacle) noexcept;
@@ -36,5 +37,6 @@ private:
     sfs::MultiSprite *_ennemySprite;
     sfs::Velocity &_velocity;
     std::string _spriteSheet;
+    float _prevAttack;
 };
 } // namespace cf

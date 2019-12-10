@@ -19,6 +19,7 @@ void GoBullet::onDestroy() noexcept
 	s << getId();
 	_manager.updateUdp(s, UdpPrctl::Type::DESTROY);
 	_manager.getColliderManager().removeFromAllies(*this);
+	_manager.getColliderManager().removeFromEnnemies(*this);
 }
 
 void GoBullet::start(sfs::Scene &scene) noexcept
@@ -41,7 +42,6 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	s << _angle << _speed;
 	s << _color;
 	s << _spriteSheet;
-	_manager.getColliderManager().addToAllies(*this);
 	_manager.updateUdp(s, UdpPrctl::Type::SPAWN);
 }
 
@@ -68,7 +68,11 @@ void GoBullet::collide(IGoObstacle &obstacle) noexcept
 
 sf::FloatRect GoBullet::getHitBox() const noexcept
 {
-	auto rect = _sprites->getGlobalBounds();
+	sf::FloatRect rect(0, 0, 0, 0);
+	if (_sprites != nullptr)
+	{
+		rect = _sprites->getGlobalBounds();
+	}
 	rect.left = getPosition().x;
 	rect.top = getPosition().y;
 	return rect;
