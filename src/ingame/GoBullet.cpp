@@ -2,13 +2,17 @@
 #include "CpnTimer.hpp"
 #include "SpriteSheetLoader.hpp"
 
-namespace cf
-{
+namespace cf {
 GoBullet::GoBullet(GameManager &manager, const sf::Vector2f &position, float angle, float speed,
-				   const sf::Color &color) noexcept
-	: IGoProjectile(manager, position, angle, speed), _angle(angle), _speed(speed), _spriteSheet("assets/SpriteSheets/Projectiles.txt"), _sprites(nullptr), _color(color)
+		   const sf::Color &color) noexcept
+	: IGoProjectile(manager, position, angle, speed)
+	, _angle(angle)
+	, _speed(speed)
+	, _spriteSheet("assets/SpriteSheets/Projectiles.txt")
+	, _sprites(nullptr)
+	, _color(color)
 {
-	addComponent<CpnTimer>(2);
+	addComponent<CpnTimer>(5);
 }
 
 void GoBullet::onDestroy() noexcept
@@ -27,8 +31,7 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 	SpriteSheetLoader loader(_spriteSheet);
 	auto *texture = scene.getAssetTexture(loader.getSpritePath());
 
-	if (texture == nullptr)
-	{
+	if (texture == nullptr) {
 		std::cerr << "Can't load " << _spriteSheet << std::endl;
 		destroy();
 		return;
@@ -58,9 +61,10 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 	}
 	if (entity.getLife() <= 1) {
 		if (entity.getEntityType() == EntityType::ENNEMY) {
-			auto player = static_cast<IGoEntity*>(this->parent());
+			auto player = static_cast<IGoEntity *>(this->parent());
 			if (player->getEntityType() == EntityType::PLAYER) {
-				static_cast<GoPlayer *>(player)->confirmKill(entity.getEntityType());
+				static_cast<GoPlayer *>(player)->confirmKill(
+					entity.getEntityType());
 			}
 		}
 		entity.destroy();
@@ -76,8 +80,7 @@ void GoBullet::collide(IGoObstacle &obstacle) noexcept
 sf::FloatRect GoBullet::getHitBox() const noexcept
 {
 	sf::FloatRect rect(0, 0, 0, 0);
-	if (_sprites != nullptr)
-	{
+	if (_sprites != nullptr) {
 		rect = _sprites->getGlobalBounds();
 	}
 	rect.left = getPosition().x;
