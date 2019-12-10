@@ -25,6 +25,7 @@ private:
 
     std::mt19937 _gen;
     std::uniform_int_distribution<> _randMapSize;
-    std::uniform_int_distribution<> _randObjPos;
+    std::uniform_int_distribution<> _randObjPosX;
+    std::uniform_int_distribution<> _randObjPosY;
 };
 } // namespace cf
