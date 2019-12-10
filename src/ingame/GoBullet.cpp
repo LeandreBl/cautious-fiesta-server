@@ -49,10 +49,7 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 {
 	entity.inflictDamage(getAttack());
 	if (entity.getLife() <= 0)
-	{
-		std::cout << "Ennemy detruit" << std::endl;
 		entity.destroy();
-	}
 	destroy();
 }
 
