@@ -19,7 +19,7 @@ void GoEnnemy::onDestroy() noexcept
 
 GoEnnemy::GoEnnemy(const sf::Vector2f &position, GameManager &manager, const std::string &ennemyName,
                    const Stats &ennemy) noexcept
-    : IGoEntity(position, ennemyName, ennemy), _gameManager(manager), _ennemySprite(nullptr), _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(0, 0), sf::Vector2f(0, 0))), _prevAttack(0)
+    : IGoEntity(position, ennemyName, ennemy), _gameManager(manager), _ennemySprite(nullptr), _spriteSheet("assets/ENNEMY1_34x34_DIAG_SSHEET.txt"), _prevPosition(addComponent<CpnPrevPosition>()), _velocity(addComponent<sfs::Velocity>(sf::Vector2f(40, 0), sf::Vector2f(0, 0))), _prevAttack(0)
 
 {
 }
@@ -53,6 +53,7 @@ void GoEnnemy::start(sfs::Scene &scene) noexcept
 void GoEnnemy::update(sfs::Scene &scene) noexcept
 {
     auto t = scene.realTime();
+    auto dt = scene.deltaTime();
     auto pos1 = getPosition();
     auto *player = _gameManager.getNearestPlayer(pos1);
     if (player == nullptr)
@@ -61,11 +62,12 @@ void GoEnnemy::update(sfs::Scene &scene) noexcept
     float angle = sfs::angle(pos1, pos2) + M_PI;
     Serializer s;
 
-    _velocity.speed.x = 20;
+    _velocity.speed.x = 40;
+    addComponent<Wandering>(2);
     s << getId();
     s << getPosition().x << getPosition().y;
     _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
-    if (t - _prevAttack > 1)
+    if (t - _prevAttack > 1 / getAttackSpeed())
     {
         _prevAttack = t;
         size_t n = 1;

@@ -64,7 +64,7 @@ void GoBoss::update(sfs::Scene &scene) noexcept
     s << getId();
     s << getPosition().x << getPosition().y;
     _gameManager.updateUdp(s, cf::UdpPrctl::Type::POSITION);
-    if (t - _prevAttack > 0.5)
+    if (t - _prevAttack > 1 / getAttackSpeed())
     {
         _prevAttack = t;
         size_t n = 1;
