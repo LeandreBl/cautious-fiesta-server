@@ -183,7 +183,7 @@ void GoPlayer::collide(IGoObstacle &obstacle) noexcept
 	_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
 }
 
-void GoPlayer::confirmKill() noexcept
+void GoPlayer::confirmKill(EntityType type) noexcept
 {
 	_kills += 1;
 	Serializer s;
@@ -192,6 +192,20 @@ void GoPlayer::confirmKill() noexcept
 	s << static_cast<uint64_t>(getId());
 	s << (float)_kills;
 	_gameManager.updateUdp(s, UdpPrctl::Type::STATE);
+
+	if (type == EntityType::ENNEMY) {
+		Serializer sez;
+		stats newStats;
+		newStats.attack = 1;
+		newStats.attackSpeed = 1/20;
+		newStats.speed = 1;
+		newStats.armor = 1;
+		levelUp(newStats);
+		sez << static_cast<int32_t>(UdpPrctl::stateType::STAT_UP);
+		sez << static_cast<uint64_t>(getId());
+		sez << (float)1;
+		_gameManager.updateUdp(sez, UdpPrctl::Type::STATE);
+	}
 }
 
 void GoPlayer::goToPrevPosition() noexcept
