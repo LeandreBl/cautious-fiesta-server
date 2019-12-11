@@ -13,6 +13,7 @@ namespace cf
             SpawnManager(GameManager &manager) noexcept;
             void start(sfs::Scene &scene) noexcept;
             void update(sfs::Scene &scene) noexcept;
+            void ennemisStatsUp() noexcept;
         protected:
             int _difficulty = 0;
             float _difficultytime;
