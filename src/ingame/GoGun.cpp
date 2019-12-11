@@ -52,6 +52,15 @@ void GoGun::attack(sfs::Scene &scene, GoPlayer &player, float angle) noexcept
 		{
 			fov = M_PI / 6;
 			n = 100;
+		} else if (player.name() == "jb") {
+			for (size_t i = 0; i < 15; ++i)
+			{
+				float rangle = rand() % 361;
+				auto &b = player.addChild<GoBullet>(scene, _manager, parent()->getPosition(), rangle,
+													800, sf::Color(0, 255, 0, 200));
+				b.setAttack(getAttack());
+				_manager.getColliderManager().addToAllies(b);
+			}
 		}
 		const float delta = fov / n;
 		const float off = (n % 2 == 0) ? 0 : (fov / 2);
