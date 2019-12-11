@@ -192,7 +192,7 @@ void GoPlayer::confirmKill(EntityType type) noexcept
 		newStats.life = 0;
 		newStats.attack = 1;
 		newStats.attackSpeed = 1 / 20;
-		newStats.speed = 1;
+		newStats.speed = 0;
 		newStats.armor = 1;
 		levelUp(newStats);
 		sez << static_cast<int32_t>(UdpPrctl::stateType::STAT_UP);

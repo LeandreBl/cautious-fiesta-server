@@ -14,7 +14,7 @@ void SpawnManager::start(sfs::Scene &scene) noexcept
 	_difficultytime = _time;
 	_ennemiStats.setArmor(20);
 	_ennemiStats.setAttack(5);
-	_ennemiStats.setAttackSpeed((float)(rand() % 10) / 10);
+	_ennemiStats.setAttackSpeed((float)(rand() % 10) / 30);
 	_ennemiStats.setLife(50);
 	_ennemiStats.setSpeed(20);
 }
@@ -40,7 +40,7 @@ void SpawnManager::update(sfs::Scene &scene) noexcept
 			ennemisStatsUp();
 		_difficultytime = time;
 	}
-	if (time - _time >= 3) {
+	if (time - _time >= 8) {
 		for (int i = 0; i != _difficulty; i += 1) {
 			if ((rand() % 101) >= 96)
 				addChild<GoBoss>(scene,
