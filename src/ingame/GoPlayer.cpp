@@ -190,6 +190,7 @@ void GoPlayer::confirmKill(EntityType type) noexcept
 	if (type == EntityType::ENNEMY) {
 		Serializer sez;
 		stats newStats;
+		newStats.life = 0;
 		newStats.attack = 1;
 		newStats.attackSpeed = 1/20;
 		newStats.speed = 1;
