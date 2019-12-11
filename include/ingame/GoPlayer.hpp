@@ -32,6 +32,7 @@ public:
 	void collide(IGoEntity &entity) noexcept;
 	void collide(IGoObstacle &obstacle) noexcept;
 	void goToPrevPosition() noexcept;
+	void confirmKill() noexcept;
 	EntityType getEntityType() noexcept {return EntityType::PLAYER;};
 	sf::FloatRect getHitBox() const noexcept;
 	IGoWeapon *getWeapon() noexcept;
@@ -45,5 +46,6 @@ private:
 	CpnPrevPosition &_prevPosition;
 	sfs::Sprite &_hat;
 	std::string _spriteName;
+	int _kills = 0;
 };
 } // namespace cf

@@ -58,6 +58,7 @@ void GoPlayer::start(sfs::Scene &scene) noexcept
 
 void GoPlayer::update(sfs::Scene &) noexcept
 {
+	
 }
 
 static UdpPrctl::inputType reverseMove(UdpPrctl::inputType key)
@@ -180,6 +181,17 @@ void GoPlayer::collide(IGoObstacle &obstacle) noexcept
 	s << getId();
 	s << getPosition().x << getPosition().y;
 	_gameManager.updateUdp(s, UdpPrctl::Type::POSITION);
+}
+
+void GoPlayer::confirmKill() noexcept
+{
+	_kills += 1;
+	Serializer s;
+
+	s << static_cast<int32_t>(UdpPrctl::stateType::KILL_NUMBER);
+	s << static_cast<uint64_t>(getId());
+	s << (float)_kills;
+	_gameManager.updateUdp(s, UdpPrctl::Type::STATE);
 }
 
 void GoPlayer::goToPrevPosition() noexcept

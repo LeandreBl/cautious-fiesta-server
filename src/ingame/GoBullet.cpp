@@ -56,8 +56,15 @@ void GoBullet::collide(IGoEntity &entity) noexcept
 		s << entity.getLife();
 		_manager.updateUdp(s, UdpPrctl::Type::STATE);
 	}
-	if (entity.getLife() <= 0)
+	if (entity.getLife() <= 1) {
+		if (entity.getEntityType() == EntityType::ENNEMY) {
+			auto player = static_cast<IGoEntity*>(this->parent());
+			if (player->getEntityType() == EntityType::PLAYER) {
+				static_cast<GoPlayer *>(player)->confirmKill();
+			}
+		}
 		entity.destroy();
+	}
 	destroy();
 }
 
