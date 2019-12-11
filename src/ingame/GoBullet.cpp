@@ -48,6 +48,14 @@ void GoBullet::start(sfs::Scene &scene) noexcept
 void GoBullet::collide(IGoEntity &entity) noexcept
 {
 	entity.inflictDamage(getAttack());
+	if (entity.getEntityType() == EntityType::PLAYER) {
+		Serializer s;
+
+		s << static_cast<int32_t>(UdpPrctl::stateType::SETLIFE);
+		s << static_cast<uint64_t>(entity.getId());
+		s << entity.getLife();
+		_manager.updateUdp(s, UdpPrctl::Type::STATE);
+	}
 	if (entity.getLife() <= 0)
 		entity.destroy();
 	destroy();

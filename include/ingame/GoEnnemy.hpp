@@ -28,6 +28,7 @@ public:
     void updateUdpVelocity() noexcept;
     sfs::Velocity &getVelocity() noexcept;
     sf::FloatRect getHitBox() const noexcept;
+    EntityType getEntityType() noexcept {return EntityType::ENNEMY;};
 
 private:
     GameManager &_gameManager;

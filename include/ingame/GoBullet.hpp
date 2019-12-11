@@ -12,6 +12,7 @@ class GoBullet : public IGoProjectile {
 	void collide(IGoEntity &entity) noexcept;
 	void collide(IGoObstacle &obstacle) noexcept;
 	sf::FloatRect getHitBox() const noexcept;
+	EntityType getEntityType() noexcept {return EntityType::BULLET;};
 
       protected:
 	float _angle;

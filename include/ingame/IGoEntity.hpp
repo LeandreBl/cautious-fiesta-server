@@ -16,10 +16,12 @@ class IGoEntity : public sfs::GameObject, public Stats {
 		, Stats(player)
 	{
 	}
+	enum EntityType {BULLET, PLAYER, ENNEMY};
 	virtual void goToPrevPosition() noexcept = 0;
 	virtual sf::FloatRect getHitBox() const noexcept = 0;
 	virtual void collide(IGoEntity &entity) noexcept = 0;
 	virtual void collide(IGoObstacle &obstacle) noexcept = 0;
 	virtual sfs::Velocity &getVelocity() noexcept = 0;
+	virtual EntityType getEntityType() noexcept = 0;
 };
 } // namespace cf

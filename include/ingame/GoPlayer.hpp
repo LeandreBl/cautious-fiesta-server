@@ -32,6 +32,7 @@ public:
 	void collide(IGoEntity &entity) noexcept;
 	void collide(IGoObstacle &obstacle) noexcept;
 	void goToPrevPosition() noexcept;
+	EntityType getEntityType() noexcept {return EntityType::PLAYER;};
 	sf::FloatRect getHitBox() const noexcept;
 	IGoWeapon *getWeapon() noexcept;
 	Serializer serialize() const noexcept;
