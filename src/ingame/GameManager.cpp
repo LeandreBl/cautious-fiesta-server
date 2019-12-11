@@ -4,6 +4,7 @@
 #include "GoEnnemy.hpp"
 #include "GoBoss.hpp"
 #include "Vector.hpp"
+#include "SpawnManager.hpp"
 
 namespace cf
 {
@@ -14,8 +15,7 @@ GameManager::GameManager(GameRoom &room, boost::asio::io_service &localService) 
 
 void GameManager::start(sfs::Scene &scene) noexcept
 {
-	for (auto &&i : _gameRoom.getPlayers())
-	{
+	for (auto &&i : _gameRoom.getPlayers()) {
 		auto &p = scene.addGameObject<GoPlayer>(sf::Vector2f(1920 / 2, 1080 / 2), *this,
 												i->name(), i->getPlayer());
 		_players.push_back(&p);
@@ -23,6 +23,7 @@ void GameManager::start(sfs::Scene &scene) noexcept
 	scene.addGameObject<GoUdp>(scene, *this, _service);
 	_colliderManager = &scene.addGameObject<ColliderManager>();
 	_map = &scene.addGameObject<MapGenerator>(*this);
+	addChild<SpawnManager>(scene, *this);
 }
 
 ColliderManager &GameManager::getColliderManager() noexcept
